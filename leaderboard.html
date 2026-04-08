@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#C8A951">
+    <title>Leaderboard | D&F Summer Essentials 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --gold-primary: #C8A951;
+            --gold-light: #e8d78e;
+            --gold-dark: #a88b3d;
+            --turquoise: #2BBCB3;
+            --turquoise-dark: #1a9b90;
+            --dark: #1a1a2e;
+        }
+        
+        * {
+            font-family: 'Inter', sans-serif;
+            box-sizing: border-box;
+        }
+        
+        h1, h2, h3, .font-display {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
+            color: white;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        .gradient-gold {
+            background: linear-gradient(135deg, #C8A951 0%, #e8d78e 100%);
+        }
+        
+        .gradient-turquoise {
+            background: linear-gradient(135deg, #2BBCB3 0%, #1a9b90 100%);
+        }
+        
+        /* Rank-based podium colors - not tier based */
+        .rank-gold { background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); }
+        .rank-silver { background: linear-gradient(135deg, #E8E8E8 0%, #C0C0C0 100%); }
+        .rank-bronze { background: linear-gradient(135deg, #CD7F32 0%, #B87333 100%); }
+        
+        .tier-1 { background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); }
+        .tier-2 { background: linear-gradient(135deg, #C0C0C0 0%, #A0A0A0 100%); }
+        .tier-3 { background: linear-gradient(135deg, #CD7F32 0%, #B87333 100%); }
+        
+        .leaderboard-item {
+            animation: slideIn 0.5s ease forwards;
+            opacity: 0;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            animation: fall 4s linear forwards;
+            z-index: 9999;
+        }
+        
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        
+        .rank-number {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        
+        .score-bar {
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.2);
+            overflow: hidden;
+        }
+        
+        .score-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+        
+        .event-selector {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+        
+        select {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        select option {
+            background: #1a1a2e;
+            color: white;
+        }
+        
+        /* Hidden refresh indicator */
+        .refresh-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            color: rgba(255,255,255,0.3);
+            font-size: 12px;
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Event Selector -->
+    <div class="event-selector">
+        <select id="eventSelect" onchange="app.changeEvent()">
+            <option value="all">Svi događaji</option>
+        </select>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="min-h-screen p-8 flex flex-col">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <div class="flex items-center justify-center gap-4 mb-4">
+                <div class="w-16 h-16 rounded-2xl gradient-gold flex items-center justify-center">
+                    <i class="fas fa-trophy text-[#1a1a2e] text-3xl"></i>
+                </div>
+                <div class="text-left">
+                    <h1 class="font-display text-4xl font-bold">Summer Essentials 2026</h1>
+                    <p class="text-gray-400">D&F Leaderboard</p>
+                </div>
+            </div>            
+            
+            <!-- Stats -->
+            <div class="flex justify-center gap-8 mt-6">
+                <div class="text-center">
+                    <p class="text-3xl font-bold text-[#C8A951]" id="totalParticipants">0</p>
+                    <p class="text-sm text-gray-400">Učesnika</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-3xl font-bold text-[#2BBCB3]" id="totalPoints">0</p>
+                    <p class="text-sm text-gray-400">Ukupno bodova</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-3xl font-bold text-[#C8A951]" id="avgScore">0</p>
+                    <p class="text-sm text-gray-400">Prosjek</p>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Top 3 Podium -->
+        <div id="podium" class="flex justify-center items-end gap-4 mb-8 h-64">
+            <!-- Will be populated by JS -->
+        </div>
+        
+        <!-- Leaderboard List -->
+        <div class="flex-1 overflow-hidden">
+            <div id="leaderboardList" class="max-w-4xl mx-auto space-y-3">
+                <!-- Will be populated by JS -->
+            </div>
+        </div>
+        
+        <!-- Tier Legend -->
+        <div class="flex justify-center gap-6 mt-6">
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 rounded tier-1"></div>
+                <span class="text-sm text-gray-400">Tier 1 (25+ bodova)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 rounded tier-2"></div>
+                <span class="text-sm text-gray-400">Tier 2 (15+ bodova)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 rounded tier-3"></div>
+                <span class="text-sm text-gray-400">Tier 3 (<15 bodova)</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="refresh-indicator">
+        <i class="fas fa-sync-alt mr-2"></i>Auto-refresh: 30s
+    </div>
+    
+    <script src="leaderboard.js"></script>
+</body>
+</html>

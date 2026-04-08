@@ -1,0 +1,19 @@
+{
+  "name": "D&F Summer Essentials 2026",
+  "short_name": "SummerEssentials",
+  "description": "Event management app for D&F Summer Essentials 2026 - Quiz, Check-in & Leaderboard",
+  "start_url": "/app.html",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#C8A951",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

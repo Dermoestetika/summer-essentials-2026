@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#C8A951">
+    <title>Check-in | D&F Summer Essentials 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --gold-primary: #C8A951;
+            --gold-light: #e8d78e;
+            --gold-dark: #a88b3d;
+            --turquoise: #2BBCB3;
+            --turquoise-dark: #1a9b90;
+            --dark: #1a1a2e;
+            --success: #16a34a;
+            --error: #dc2626;
+        }
+        
+        * {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        h1, h2, h3, .font-display {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        body {
+            background-color: #faf8f4;
+            color: var(--dark);
+            overflow-x: hidden;
+        }
+        
+        .gradient-gold {
+            background: linear-gradient(135deg, #C8A951 0%, #e8d78e 100%);
+        }
+        
+        .gradient-turquoise {
+            background: linear-gradient(135deg, #2BBCB3 0%, #1a9b90 100%);
+        }
+        
+        .gradient-dark {
+            background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
+        }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Scanner area */
+        .scanner-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 1;
+            margin: 0 auto;
+        }
+        
+        .scanner-frame {
+            position: absolute;
+            inset: 20px;
+            border: 3px solid var(--gold-primary);
+            border-radius: 24px;
+        }
+        
+        .scanner-corner {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-color: var(--gold-primary);
+            border-style: solid;
+            border-width: 0;
+        }
+        
+        .scanner-corner.top-left {
+            top: 10px;
+            left: 10px;
+            border-top-width: 5px;
+            border-left-width: 5px;
+            border-top-left-radius: 16px;
+        }
+        
+        .scanner-corner.top-right {
+            top: 10px;
+            right: 10px;
+            border-top-width: 5px;
+            border-right-width: 5px;
+            border-top-right-radius: 16px;
+        }
+        
+        .scanner-corner.bottom-left {
+            bottom: 10px;
+            left: 10px;
+            border-bottom-width: 5px;
+            border-left-width: 5px;
+            border-bottom-left-radius: 16px;
+        }
+        
+        .scanner-corner.bottom-right {
+            bottom: 10px;
+            right: 10px;
+            border-bottom-width: 5px;
+            border-right-width: 5px;
+            border-bottom-right-radius: 16px;
+        }
+        
+        .scanner-laser {
+            position: absolute;
+            left: 10%;
+            right: 10%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+            animation: scan 2s ease-in-out infinite;
+            box-shadow: 0 0 10px var(--gold-primary);
+        }
+        
+        @keyframes scan {
+            0%, 100% { top: 20%; opacity: 0; }
+            50% { top: 80%; opacity: 1; }
+        }
+        
+        /* Manual input */
+        .manual-input {
+            background: white;
+            border: 3px solid #e5e7eb;
+            border-radius: 16px;
+            font-size: 32px;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: var(--dark);
+            transition: all 0.3s;
+        }
+        
+        .manual-input:focus {
+            outline: none;
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 0 4px rgba(200, 169, 81, 0.2);
+        }
+        
+        /* Result cards */
+        .result-card {
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            animation: slideUp 0.4s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .result-success {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            color: white;
+        }
+        
+        .result-error {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+        }
+        
+        .result-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+        
+        /* Keypad */
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .keypad-btn {
+            aspect-ratio: 1;
+            border-radius: 16px;
+            border: none;
+            background: white;
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--dark);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: all 0.1s;
+            cursor: pointer;
+        }
+        
+        .keypad-btn:active {
+            transform: scale(0.95);
+            background: var(--gold-light);
+        }
+        
+        .keypad-btn.action {
+            background: linear-gradient(135deg, #C8A951 0%, #e8d78e 100%);
+            color: #1a1a2e;
+        }
+        
+        .keypad-btn.delete {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        /* Stats */
+        .stat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: white;
+            border-radius: 9999px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* Sound indicator - moved to bottom left */
+        .sound-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: pointer;
+            z-index: 100;
+        }
+        
+        .hidden { display: none !important; }
+        
+        /* Responsive */
+        @media (min-width: 768px) {
+            .tablet-layout {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 40px;
+                align-items: start;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-screen gradient-dark flex items-center justify-center p-8">
+        <div class="glass rounded-3xl p-10 w-full max-w-md text-center">
+            <div class="w-24 h-24 mx-auto mb-6 rounded-full gradient-gold flex items-center justify-center shadow-lg">
+                <i class="fas fa-clipboard-check text-[#1a1a2e] text-3xl"></i>
+            </div>
+            <h1 class="font-display text-3xl font-bold text-[#1a1a2e] mb-2">Check-in</h1>
+            <p class="text-gray-600 mb-8">Summer Essentials 2026</p>
+            
+            <select id="eventSelect" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 mb-4 text-lg">
+                <option value="">Izaberite događaj...</option>
+            </select>
+            
+            <button onclick="app.login()" class="w-full py-4 rounded-xl gradient-gold text-[#1a1a2e] font-bold text-lg">
+                <i class="fas fa-play mr-2"></i>Pokreni check-in
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Check-in Interface -->
+    <div id="mainApp" class="hidden">
+        <!-- Header -->
+        <header class="gradient-dark text-white p-4">
+            <div class="max-w-6xl mx-auto flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl gradient-gold flex items-center justify-center">
+                        <i class="fas fa-clipboard-check text-[#1a1a2e] text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-display text-xl font-bold">Check-in</h1>
+                        <p id="currentEvent" class="text-sm text-gray-400">-</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <div class="stat-pill" title="Checkirani / Ukupno prijavljeni">
+                        <i class="fas fa-users text-[#C8A951]"></i>
+                        <span class="text-sm text-gray-500">Check:</span>
+                        <span id="checkedInCount" class="font-bold text-[#1a1a2e]">0</span>
+                        <span class="text-gray-400">/</span>
+                        <span class="text-sm text-gray-500">Ukupno:</span>
+                        <span id="totalCount" class="font-bold text-[#1a1a2e]">0</span>
+                    </div>
+                    <button onclick="app.logout()" class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="p-6 max-w-6xl mx-auto">
+            <div class="tablet-layout">
+                <!-- Left: Scanner / Input -->
+                <div>
+                    <!-- Mode Toggle -->
+                    <div class="flex gap-2 mb-6">
+                        <button onclick="app.setMode('scan')" id="scanModeBtn" class="flex-1 py-3 rounded-xl bg-[#C8A951] text-white font-medium">
+                            <i class="fas fa-camera mr-2"></i>Skeniraj
+                        </button>
+                        <button onclick="app.setMode('manual')" id="manualModeBtn" class="flex-1 py-3 rounded-xl bg-gray-200 text-gray-700 font-medium">
+                            <i class="fas fa-keyboard mr-2"></i>Ručni unos
+                        </button>
+                    </div>
+
+                    <!-- Scanner Mode -->
+                    <div id="scannerMode" class="text-center">
+                        <div id="scannerContainer" class="scanner-container gradient-dark rounded-3xl mb-6 relative overflow-hidden">
+                            <div id="checkin-qr-reader" class="w-full h-full"></div>
+                            <!-- Scanner overlay UI -->
+                            <div id="scannerOverlayUI" class="absolute inset-0 pointer-events-none">
+                                <div class="scanner-frame">
+                                    <div class="scanner-corner top-left"></div>
+                                    <div class="scanner-corner top-right"></div>
+                                    <div class="scanner-corner bottom-left"></div>
+                                    <div class="scanner-corner bottom-right"></div>
+                                    <div class="scanner-laser"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Camera error message -->
+                            <div id="cameraError" class="hidden absolute inset-0 flex items-center justify-center bg-[#1a1a2e]">
+                                <div class="text-center p-6">
+                                    <i class="fas fa-exclamation-triangle text-[#C8A951] text-4xl mb-4"></i>
+                                    <p class="text-white mb-2">Kamera nije dostupna</p>
+                                    <p class="text-gray-400 text-sm">Koristite ručni unos ili pokušajte osvježiti stranicu</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <p class="text-gray-600 mb-4">Usmjerite kameru na QR kod učesnika</p>
+                        
+                        <div class="flex gap-3">
+                            <button onclick="app.restartScanner()" class="flex-1 py-3 px-4 rounded-xl bg-gray-200 text-gray-700 font-medium text-sm">
+                                <i class="fas fa-redo mr-2"></i>Ponovo pokreni kameru
+                            </button>
+                            
+                            <button onclick="app.simulateScan()" class="flex-1 py-3 px-4 rounded-xl gradient-gold text-[#1a1a2e] font-medium text-sm">
+                                <i class="fas fa-bolt mr-2"></i>Simuliraj skeniranje
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Manual Mode -->
+                    <div id="manualMode" class="hidden">
+                        <div class="glass rounded-3xl p-6 mb-4">
+                            <input type="text" id="manualCodeInput" readonly 
+                                class="manual-input w-full py-4 mb-4"
+                                placeholder="SE_______"
+                                maxlength="10">
+                            
+                            <div class="keypad">
+                                <button class="keypad-btn" onclick="app.keypadInput('1')">1</button>
+                                <button class="keypad-btn" onclick="app.keypadInput('2')">2</button>
+                                <button class="keypad-btn" onclick="app.keypadInput('3')">3</button>
+                                
+                                <button class="keypad-btn" onclick="app.keypadInput('4')">4</button>
+                                <button class="keypad-btn" onclick="app.keypadInput('5')">5</button>
+                                <button class="keypad-btn" onclick="app.keypadInput('6')">6</button>
+                                
+                                <button class="keypad-btn" onclick="app.keypadInput('7')">7</button>
+                                <button class="keypad-btn" onclick="app.keypadInput('8')">8</button>
+                                <button class="keypad-btn" onclick="app.keypadInput('9')">9</button>
+                                
+                                <button class="keypad-btn" onclick="app.keypadInput('SE')">SE</button>
+                                <button class="keypad-btn" onclick="app.keypadInput('0')">0</button>
+                                <button class="keypad-btn delete" onclick="app.keypadDelete()">
+                                    <i class="fas fa-backspace"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button onclick="app.checkInManual()" class="w-full py-4 rounded-xl gradient-gold text-[#1a1a2e] font-bold text-lg">
+                            <i class="fas fa-check mr-2"></i>Potvrdi check-in
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right: Recent Check-ins -->
+                <div>
+                    <div class="glass rounded-3xl p-6">
+                        <h3 class="font-display text-xl font-bold text-[#1a1a2e] mb-4">
+                            <i class="fas fa-history mr-2 text-[#C8A951]"></i>
+                            Nedavni check-in-i
+                        </h3>
+                        
+                        <div id="recentCheckins" class="space-y-3 max-h-96 overflow-y-auto">
+                            <p class="text-gray-500 text-center py-8">Nema nedavnih check-in-a</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Result Modal -->
+        <div id="resultModal" class="fixed inset-0 z-50 hidden items-center justify-center p-6 bg-black/50">
+            <div id="resultCard" class="result-card max-w-md w-full">
+                <div id="resultIcon" class="w-24 h-24 mx-auto mb-4 rounded-full bg-white/20 flex items-center justify-center">
+                    <i class="fas fa-check text-4xl"></i>
+                </div>
+                
+                <h2 id="resultTitle" class="font-display text-3xl font-bold mb-2">Check-in uspješan!</h2>
+                
+                <div id="resultContent" class="mb-6">
+                    <p class="text-xl mb-2"><strong id="resultName">-</strong></p>
+                    <p id="resultDetails" class="text-white/80">-</p>
+                </div>
+                
+                <button onclick="app.closeResult()" class="w-full py-4 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-lg transition-colors">
+                    Nastavi
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sound toggle -->
+    <div class="sound-indicator" onclick="app.toggleSound()">
+        <i id="soundIcon" class="fas fa-volume-up text-[#C8A951]"></i>
+    </div>
+
+    <!-- Test QR Codes (for development) -->
+    <div id="testQRCodes" class="fixed bottom-4 left-4 right-4 bg-white rounded-2xl shadow-2xl p-4 z-40 hidden">
+        <div class="flex items-center justify-between mb-3">
+            <h4 class="font-bold text-[#1a1a2e]"><i class="fas fa-qrcode mr-2 text-[#C8A951]"></i>Test QR kodovi za skeniranje</h4>
+            <button onclick="document.getElementById('testQRCodes').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="text-center">
+                <div id="qr1" class="mx-auto mb-2"></div>
+                <p class="text-xs font-mono">SE12345678</p>
+                <p class="text-xs text-gray-500">Banja Luka</p>
+            </div>
+            <div class="text-center">
+                <div id="qr2" class="mx-auto mb-2"></div>
+                <p class="text-xs font-mono">SE87654321</p>
+                <p class="text-xs text-gray-500">Sarajevo</p>
+            </div>
+            <div class="text-center">
+                <div id="qr3" class="mx-auto mb-2"></div>
+                <p class="text-xs font-mono">SE11112222</p>
+                <p class="text-xs text-gray-500">Mostar</p>
+            </div>
+            <div class="text-center">
+                <div id="qr4" class="mx-auto mb-2"></div>
+                <p class="text-xs font-mono">SE99998888</p>
+                <p class="text-xs text-gray-500">Banja Luka</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Show Test QR Button -->
+    <button onclick="app.showTestQRs()" class="fixed bottom-4 right-4 bg-[#2BBCB3] text-white px-4 py-2 rounded-full shadow-lg z-30 text-sm font-medium">
+        <i class="fas fa-qrcode mr-2"></i>Prikaži test QR
+    </button>
+
+    <script src="checkin.js"></script>
+    <script>
+        // Generate test QR codes
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                if (document.getElementById('qr1')) {
+                    new QRCode(document.getElementById('qr1'), { text: 'SE12345678', width: 80, height: 80 });
+                    new QRCode(document.getElementById('qr2'), { text: 'SE87654321', width: 80, height: 80 });
+                    new QRCode(document.getElementById('qr3'), { text: 'SE11112222', width: 80, height: 80 });
+                    new QRCode(document.getElementById('qr4'), { text: 'SE99998888', width: 80, height: 80 });
+                }
+            }, 500);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#C8A951">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>D&F Summer Essentials 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --gold-primary: #C8A951;
+            --gold-light: #e8d78e;
+            --gold-dark: #a88b3d;
+            --turquoise: #2BBCB3;
+            --turquoise-dark: #1a9b90;
+            --dark: #1a1a2e;
+            --dark-light: #2d2d44;
+            --light-bg: #faf8f4;
+        }
+        
+        * {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        h1, h2, h3, h4, h5, h6, .font-display {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            color: var(--dark);
+            overflow-x: hidden;
+        }
+        
+        .gradient-gold {
+            background: linear-gradient(135deg, #C8A951 0%, #e8d78e 100%);
+        }
+        
+        .gradient-turquoise {
+            background: linear-gradient(135deg, #2BBCB3 0%, #1a9b90 100%);
+        }
+        
+        .gradient-dark {
+            background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
+        }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .glass-dark {
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(12px);
+        }
+        
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100vh;
+            position: relative;
+            padding-bottom: 80px;
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            background: white;
+            border-top: 1px solid rgba(200, 169, 81, 0.2);
+            z-index: 100;
+        }
+        
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 0;
+            color: #9ca3af;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .nav-item.active {
+            color: var(--gold-primary);
+        }
+        
+        .nav-item i {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-item span {
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .qr-card {
+            background: linear-gradient(135deg, #C8A951 0%, #e8d78e 100%);
+            border-radius: 24px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(200, 169, 81, 0.3);
+        }
+        
+        .qr-display {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px 0;
+            display: inline-block;
+        }
+        
+        .qr-code-text {
+            font-family: 'Courier New', monospace;
+            font-size: 28px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            color: #1a1a2e;
+            margin-top: 15px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #C8A951 0%, #e8d78e 100%);
+            color: #1a1a2e;
+            font-weight: 600;
+            padding: 16px 32px;
+            border-radius: 12px;
+            border: none;
+            width: 100%;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+        
+        .btn-turquoise {
+            background: linear-gradient(135deg, #2BBCB3 0%, #1a9b90 100%);
+            color: white;
+            font-weight: 600;
+            padding: 16px 32px;
+            border-radius: 12px;
+            border: none;
+            width: 100%;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .tier-badge-1 {
+            background: linear-gradient(135deg, #C8A951 0%, #e8d78e 100%);
+            color: #1a1a2e;
+        }
+        
+        .tier-badge-2 {
+            background: linear-gradient(135deg, #2BBCB3 0%, #1a9b90 100%);
+            color: white;
+        }
+        
+        .tier-badge-3 {
+            background: linear-gradient(135deg, #8B9DC3 0%, #6b7c9c 100%);
+            color: white;
+        }
+        
+        .sponsor-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .sponsor-card:active {
+            transform: scale(0.98);
+        }
+        
+        .sponsor-card.visited {
+            border-color: var(--turquoise);
+        }
+        
+        .quiz-option {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .quiz-option:active {
+            transform: scale(0.98);
+        }
+        
+        .quiz-option.selected {
+            border-color: var(--gold-primary);
+            background: rgba(200, 169, 81, 0.1);
+        }
+        
+        .quiz-option.correct {
+            border-color: #16a34a;
+            background: rgba(22, 163, 74, 0.1);
+        }
+        
+        .quiz-option.wrong {
+            border-color: #dc2626;
+            background: rgba(220, 38, 38, 0.1);
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(135deg, #C8A951 0%, #e8d78e 100%);
+            transition: width 0.5s ease;
+        }
+        
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .rank-badge {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+        
+        .scanner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 200;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .scanner-overlay.active {
+            display: flex;
+        }
+        
+        .scanner-frame {
+            width: 280px;
+            height: 280px;
+            border: 2px solid var(--gold-primary);
+            border-radius: 20px;
+            position: relative;
+        }
+        
+        .scanner-frame::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--gold-primary);
+            animation: scan 2s linear infinite;
+        }
+        
+        @keyframes scan {
+            0%, 100% { opacity: 0; transform: translateY(-100px); }
+            50% { opacity: 1; transform: translateY(100px); }
+        }
+        
+        .hidden { display: none !important; }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(200, 169, 81, 0.3);
+            border-top-color: var(--gold-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Modal for QR display */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 150;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 30px;
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        /* Center QR code in modal */
+        #modalQRCode {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #modalQRCode img {
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Login Screen -->
+        <div id="loginScreen" class="min-h-screen gradient-dark flex items-center justify-center p-6">
+            <div class="w-full max-w-sm">
+                <div class="text-center mb-10">
+                    <div class="w-24 h-24 mx-auto mb-6 rounded-full gradient-gold flex items-center justify-center shadow-lg">
+                        <span class="font-display font-bold text-[#1a1a2e] text-3xl">D&F</span>
+                    </div>
+                    <h1 class="font-display text-3xl font-bold text-white mb-2">Summer Essentials</h1>
+                    <p class="text-gray-400">2026</p>
+                </div>
+                
+                <div class="glass rounded-2xl p-6 mb-6">
+                    <p class="text-center text-gray-600 mb-6">Unesite svoj QR kod za prijavu</p>
+                    <div class="space-y-4">
+                        <input type="text" id="qrCodeInput" placeholder="npr. SE8X7K9M2P" 
+                            class="w-full px-4 py-4 rounded-xl border-2 border-gray-200 text-center text-2xl font-mono tracking-widest uppercase focus:border-[#C8A951] focus:outline-none transition-colors">
+                        <button onclick="app.login()" class="btn-primary">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Prijavi se
+                        </button>
+                    </div>
+                    <p id="loginError" class="text-red-500 text-sm text-center mt-4 hidden">
+                        <i class="fas fa-exclamation-circle mr-1"></i>Neispravan QR kod
+                    </p>
+                </div>
+                
+                <div class="text-center space-y-3">
+                    <button onclick="app.showScanner('login')" class="text-[#C8A951] flex items-center justify-center gap-2 mx-auto py-2">
+                        <i class="fas fa-camera text-xl"></i>
+                        <span>Skeniraj QR kod kamerom</span>
+                    </button>
+                    <p class="text-gray-500 text-sm">ili</p>
+                    <button onclick="document.getElementById('qrCodeInput').focus()" class="text-gray-400 text-sm">
+                        Unesi kod ručno
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main App -->
+        <div id="mainApp" class="hidden">
+            <!-- Header -->
+            <header class="gradient-dark text-white p-6 pb-8 rounded-b-3xl">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <p class="text-gray-400 text-sm">Dobrodošli</p>
+                        <h2 id="userName" class="font-display text-2xl font-bold">-</h2>
+                    </div>
+                    <div class="w-12 h-12 rounded-full gradient-gold flex items-center justify-center">
+                        <i class="fas fa-user text-[#1a1a2e] text-lg"></i>
+                    </div>
+                </div>
+                <div id="userTier" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10">
+                    <i class="fas fa-trophy text-[#C8A951]"></i>
+                    <span class="text-sm font-medium">Tier 3</span>
+                </div>
+            </header>
+
+            <!-- Home Page -->
+            <div id="page-home" class="page active p-6">
+                <!-- My QR Code -->
+                <div class="qr-card mb-6" onclick="app.showMyQR()">
+                    <p class="text-[#1a1a2e] font-medium mb-2">Moj QR kod za ulaz</p>
+                    <div class="qr-display">
+                        <div id="homeQRCode"></div>
+                    </div>
+                    <p id="displayQrCode" class="qr-code-text">-</p>
+                    <p class="text-[#1a1a2e]/70 text-sm mt-4">
+                        <i class="fas fa-expand mr-1"></i> Dodirni za povećanje
+                    </p>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="glass rounded-2xl p-4 text-center">
+                        <p class="text-3xl font-bold text-[#C8A951]" id="homeScore">0</p>
+                        <p class="text-gray-500 text-sm">Bodova</p>
+                    </div>
+                    <div class="glass rounded-2xl p-4 text-center">
+                        <p class="text-3xl font-bold text-[#2BBCB3]" id="homeRank">-</p>
+                        <p class="text-gray-500 text-sm">Pozicija</p>
+                    </div>
+                </div>
+
+                <!-- Event Info -->
+                <div class="glass rounded-2xl p-5 mb-6">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 rounded-full bg-[#C8A951]/10 flex items-center justify-center">
+                            <i class="fas fa-calendar text-[#C8A951]"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-[#1a1a2e]" id="eventName">-</p>
+                            <p class="text-sm text-gray-500" id="eventDate">-</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-[#2BBCB3]/10 flex items-center justify-center">
+                            <i class="fas fa-map-marker-alt text-[#2BBCB3]"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-[#1a1a2e]">Lokacija</p>
+                            <p class="text-sm text-gray-500" id="eventLocation">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Page -->
+            <div id="page-quiz" class="page p-6">
+                <h2 class="font-display text-2xl font-bold text-[#1a1a2e] mb-6">Kviz Štandovi</h2>
+                <p class="text-gray-600 mb-6">Posjetite štandove, skenirajte QR kodove i odgovorite na pitanja!</p>
+                
+                <div id="sponsorsList" class="space-y-4">
+                    <!-- Sponsors will be loaded here -->
+                </div>
+                
+                <button onclick="app.showScanner()" class="btn-turquoise mt-6 flex items-center justify-center gap-2">
+                    <i class="fas fa-qrcode text-xl"></i>
+                    Skeniraj QR kod štanda
+                </button>
+            </div>
+
+            <!-- Quiz Question Page -->
+            <div id="page-question" class="page p-6">
+                <div class="flex items-center gap-2 mb-6">
+                    <button onclick="app.navigate('quiz')" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                        <i class="fas fa-arrow-left text-gray-600"></i>
+                    </button>
+                    <div class="flex-1">
+                        <div class="progress-bar mb-2">
+                            <div id="quizProgress" class="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <p class="text-sm text-gray-500 text-center">
+                            Pitanje <span id="currentQuestion">1</span>/5
+                        </p>
+                    </div>
+                </div>
+                
+                <div id="sponsorInfo" class="flex items-center gap-3 mb-6 p-4 bg-white rounded-xl">
+                    <!-- Sponsor info will be loaded here -->
+                </div>
+                
+                <div id="questionContainer" class="mb-6">
+                    <!-- Question will be loaded here -->
+                </div>
+                
+                <div id="optionsContainer" class="space-y-3">
+                    <!-- Options will be loaded here -->
+                </div>
+                
+                <button id="nextQuestionBtn" onclick="app.nextQuestion()" class="btn-primary mt-6 hidden">
+                    Sljedeće pitanje
+                    <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+
+            <!-- Leaderboard Page -->
+            <div id="page-leaderboard" class="page p-6">
+                <h2 class="font-display text-2xl font-bold text-[#1a1a2e] mb-2">Rang lista</h2>
+                <p class="text-gray-600 mb-6">Pogledajte svoju poziciju i rezultate ostalih</p>
+                
+                <!-- My Position -->
+                <div id="myPosition" class="gradient-gold rounded-2xl p-5 mb-6 text-center">
+                    <!-- My position will be loaded here -->
+                </div>
+                
+                <!-- Tier Legend -->
+                <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+                    <div class="flex items-center gap-2 px-3 py-2 bg-white rounded-full whitespace-nowrap">
+                        <div class="w-4 h-4 rounded-full tier-badge-1"></div>
+                        <span class="text-sm">Tier 1 (25+)</span>
+                    </div>
+                    <div class="flex items-center gap-2 px-3 py-2 bg-white rounded-full whitespace-nowrap">
+                        <div class="w-4 h-4 rounded-full tier-badge-2"></div>
+                        <span class="text-sm">Tier 2 (15+)</span>
+                    </div>
+                    <div class="flex items-center gap-2 px-3 py-2 bg-white rounded-full whitespace-nowrap">
+                        <div class="w-4 h-4 rounded-full tier-badge-3"></div>
+                        <span class="text-sm">Tier 3 (0-14)</span>
+                    </div>
+                </div>
+                
+                <!-- Leaderboard List -->
+                <div id="leaderboardList" class="space-y-2">
+                    <!-- Leaderboard items will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Profile Page -->
+            <div id="page-profile" class="page p-6">
+                <h2 class="font-display text-2xl font-bold text-[#1a1a2e] mb-6">Profil</h2>
+                
+                <div class="text-center mb-8">
+                    <div class="w-24 h-24 mx-auto mb-4 rounded-full gradient-gold flex items-center justify-center">
+                        <i class="fas fa-user text-[#1a1a2e] text-3xl"></i>
+                    </div>
+                    <h3 id="profileName" class="font-display text-xl font-bold text-[#1a1a2e]">-</h3>
+                    <p id="profileEmail" class="text-gray-500">-</p>
+                </div>
+                
+                <div class="glass rounded-2xl p-5 mb-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-gray-600">Ukupno bodova</span>
+                        <span id="profileScore" class="text-2xl font-bold text-[#C8A951]">0</span>
+                    </div>
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-gray-600">Odigrani kvizovi</span>
+                        <span id="profileQuizzes" class="text-2xl font-bold text-[#2BBCB3]">0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Trenutni tier</span>
+                        <span id="profileTier" class="px-3 py-1 rounded-full tier-badge-3 text-sm font-medium">Tier 3</span>
+                    </div>
+                </div>
+                
+                <button onclick="app.logout()" class="w-full py-4 rounded-xl border-2 border-red-200 text-red-600 font-medium flex items-center justify-center gap-2">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Odjavi se
+                </button>
+            </div>
+
+            <!-- Bottom Navigation -->
+            <nav class="bottom-nav">
+                <div class="flex">
+                    <div class="nav-item active" onclick="app.navigate('home')">
+                        <i class="fas fa-home"></i>
+                        <span>Početna</span>
+                    </div>
+                    <div class="nav-item" onclick="app.navigate('quiz')">
+                        <i class="fas fa-gamepad"></i>
+                        <span>Kviz</span>
+                    </div>
+                    <div class="nav-item" onclick="app.navigate('leaderboard')">
+                        <i class="fas fa-trophy"></i>
+                        <span>Rang lista</span>
+                    </div>
+                    <div class="nav-item" onclick="app.navigate('profile')">
+                        <i class="fas fa-user"></i>
+                        <span>Profil</span>
+                    </div>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Scanner Overlay -->
+        <div id="scannerOverlay" class="scanner-overlay">
+            <div class="text-center mb-4 px-6">
+                <p id="scannerTitle" class="text-white text-lg font-medium mb-1">Skenirajte QR kod</p>
+                <p id="scannerSubtitle" class="text-gray-400 text-sm">Usmjerite kameru na kod</p>
+            </div>
+            <div id="qr-reader" class="w-full max-w-sm mx-4 rounded-2xl overflow-hidden"></div>
+            <div id="scannerError" class="hidden text-red-400 text-center px-6 mt-4">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                <span>Kamera nije dostupna. Koristite ručni unos.</span>
+            </div>
+            <button onclick="app.hideScanner()" class="mt-6 px-8 py-3 rounded-full bg-white/20 text-white">
+                <i class="fas fa-times mr-2"></i>Zatvori
+            </button>
+        </div>
+
+        <!-- QR Modal -->
+        <div id="qrModal" class="modal-overlay" onclick="app.hideQRModal()">
+            <div class="modal-content" onclick="event.stopPropagation()">
+                <p class="text-gray-600 mb-4">Prikažite ovaj kod na ulazu</p>
+                <div id="modalQRCode" class="mb-4"></div>
+                <p id="modalQRText" class="font-mono text-2xl font-bold text-[#1a1a2e] tracking-widest mb-6">-</p>
+                <button onclick="app.hideQRModal()" class="btn-primary">Zatvori</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(reg => console.log('SW registered'))
+                .catch(err => console.log('SW error:', err));
+        }
+    </script>
+</body>
+</html>

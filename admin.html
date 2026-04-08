@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&F Summer Essentials 2026 - Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --gold-primary: #C8A951;
+            --gold-light: #e8d78e;
+            --gold-dark: #a88b3d;
+            --turquoise: #2BBCB3;
+            --turquoise-dark: #1a9b90;
+            --dark: #1a1a2e;
+            --dark-light: #2d2d44;
+            --light-bg: #faf8f4;
+            --danger: #dc2626;
+            --success: #16a34a;
+            --warning: #f59e0b;
+        }
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        h1, h2, h3, h4, h5, h6, .font-display {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            color: var(--dark);
+        }
+        
+        .gradient-gold {
+            background: linear-gradient(135deg, #C8A951 0%, #e8d78e 100%);
+        }
+        
+        .gradient-turquoise {
+            background: linear-gradient(135deg, #2BBCB3 0%, #1a9b90 100%);
+        }
+        
+        .gradient-dark {
+            background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
+        }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .glass-dark {
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(12px);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #C8A951 0%, #e8d78e 100%);
+            color: #1a1a2e;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(200, 169, 81, 0.4);
+        }
+        
+        .btn-turquoise {
+            background: linear-gradient(135deg, #2BBCB3 0%, #1a9b90 100%);
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-turquoise:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(43, 188, 179, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4);
+        }
+        
+        .nav-item {
+            transition: all 0.3s ease;
+            border-radius: 0.75rem;
+        }
+        
+        .nav-item:hover {
+            background: rgba(200, 169, 81, 0.1);
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(135deg, #C8A951 0%, #e8d78e 100%);
+            color: #1a1a2e;
+        }
+        
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tier-badge-1 {
+            background: linear-gradient(135deg, #C8A951 0%, #e8d78e 100%);
+            color: #1a1a2e;
+        }
+        
+        .tier-badge-2 {
+            background: linear-gradient(135deg, #2BBCB3 0%, #1a9b90 100%);
+            color: white;
+        }
+        
+        .tier-badge-3 {
+            background: linear-gradient(135deg, #8B9DC3 0%, #6b7c9c 100%);
+            color: white;
+        }
+        
+        .email-sent {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        }
+        
+        .email-pending {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+        }
+        
+        .table-row {
+            transition: all 0.2s ease;
+        }
+        
+        .table-row:hover {
+            background: rgba(200, 169, 81, 0.05);
+        }
+        
+        .custom-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--gold-primary);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .custom-checkbox.checked {
+            background: linear-gradient(135deg, #C8A951 0%, #e8d78e 100%);
+            border-color: var(--gold-primary);
+        }
+        
+        .custom-checkbox.checked::after {
+            content: '✓';
+            color: #1a1a2e;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .action-btn.edit {
+            background: rgba(43, 188, 179, 0.1);
+            color: var(--turquoise);
+        }
+        
+        .action-btn.edit:hover {
+            background: var(--turquoise);
+            color: white;
+        }
+        
+        .action-btn.delete {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--danger);
+        }
+        
+        .action-btn.delete:hover {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .action-btn.qr {
+            background: rgba(200, 169, 81, 0.1);
+            color: var(--gold-primary);
+        }
+        
+        .action-btn.qr:hover {
+            background: var(--gold-primary);
+            color: white;
+        }
+        
+        .action-btn.email {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+        
+        .action-btn.email:hover {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .loading-spinner {
+            border: 3px solid rgba(200, 169, 81, 0.2);
+            border-top-color: var(--gold-primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            color: white;
+            font-weight: 500;
+            z-index: 9999;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast.success { background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); }
+        .toast.error { background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); }
+        .toast.warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        
+        .qr-preview {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            display: inline-block;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .hidden { display: none !important; }
+        
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: none;
+            background: transparent;
+            color: #666;
+            cursor: pointer;
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(135deg, #C8A951 0%, #e8d78e 100%);
+            color: #1a1a2e;
+        }
+        
+        .tab-btn:hover:not(.active) {
+            background: rgba(200, 169, 81, 0.1);
+            color: var(--gold-dark);
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 0 3px rgba(200, 169, 81, 0.1);
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #374151;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center gradient-dark">
+        <div class="glass rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
+            <div class="text-center mb-8">
+                <div class="w-24 h-24 mx-auto mb-6 rounded-full gradient-gold flex items-center justify-center shadow-lg">
+                    <i class="fas fa-user-shield text-3xl text-[#1a1a2e]"></i>
+                </div>
+                <h1 class="font-display text-3xl font-bold text-white mb-2">D&F Summer Essentials</h1>
+                <p class="text-gray-400">Admin Panel 2026</p>
+            </div>
+            <form id="loginForm" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                    <input type="email" id="loginEmail" value="admin@anapharm.ba" class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-500 focus:outline-none focus:border-[#C8A951] transition-colors">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Lozinka</label>
+                    <input type="password" id="loginPassword" value="admin2026" class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-500 focus:outline-none focus:border-[#C8A951] transition-colors">
+                </div>
+                <button type="submit" class="w-full py-3 rounded-lg gradient-gold text-[#1a1a2e] font-semibold text-lg hover:shadow-lg transition-all">
+                    <i class="fas fa-sign-in-alt mr-2"></i> Prijavi se
+                </button>
+            </form>
+            <p id="loginError" class="mt-4 text-red-400 text-sm text-center hidden">
+                <i class="fas fa-exclamation-circle mr-1"></i> Neispravni podaci za prijavu
+            </p>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="hidden">
+        <!-- Header -->
+        <header class="glass sticky top-0 z-40 border-b border-[#C8A951]/20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl gradient-gold flex items-center justify-center shadow-md">
+                            <span class="font-display font-bold text-[#1a1a2e] text-lg">D&F</span>
+                        </div>
+                        <div>
+                            <h1 class="font-display font-bold text-xl text-[#1a1a2e]">Summer Essentials</h1>
+                            <p class="text-xs text-gray-500">Admin Panel 2026</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="app.exportData()" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all text-sm font-medium">
+                            <i class="fas fa-download mr-2"></i>Export
+                        </button>
+                        <button onclick="app.importData()" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all text-sm font-medium">
+                            <i class="fas fa-upload mr-2"></i>Import
+                        </button>
+                        <button onclick="app.logout()" class="px-4 py-2 rounded-lg text-gray-600 hover:text-red-600 hover:bg-red-50 transition-all">
+                            <i class="fas fa-sign-out-alt text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex max-w-7xl mx-auto min-h-screen">
+            <!-- Sidebar -->
+            <aside class="w-64 glass min-h-screen border-r border-[#C8A951]/20 flex-shrink-0">
+                <nav class="p-4 space-y-1">
+                    <button onclick="app.navigate('dashboard')" data-page="dashboard" class="nav-item active w-full flex items-center gap-3 px-4 py-3 text-left">
+                        <i class="fas fa-chart-line w-5"></i>
+                        <span>Dashboard</span>
+                    </button>
+                    <button onclick="app.navigate('events')" data-page="events" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-left text-gray-600">
+                        <i class="fas fa-calendar-alt w-5"></i>
+                        <span>Događaji</span>
+                    </button>
+                    <button onclick="app.navigate('sponsors')" data-page="sponsors" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-left text-gray-600">
+                        <i class="fas fa-building w-5"></i>
+                        <span>Sponzori</span>
+                    </button>
+                    <button onclick="app.navigate('participants')" data-page="participants" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-left text-gray-600">
+                        <i class="fas fa-users w-5"></i>
+                        <span>Učesnici</span>
+                    </button>
+                    <button onclick="app.navigate('emails')" data-page="emails" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-left text-gray-600">
+                        <i class="fas fa-envelope w-5"></i>
+                        <span>Email QR Kodovi</span>
+                        <span id="emailBadge" class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full hidden">0</span>
+                    </button>
+                    <button onclick="app.navigate('questions')" data-page="questions" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-left text-gray-600">
+                        <i class="fas fa-question-circle w-5"></i>
+                        <span>Pitanja</span>
+                    </button>
+                    <button onclick="app.navigate('leaderboard')" data-page="leaderboard" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-left text-gray-600">
+                        <i class="fas fa-trophy w-5"></i>
+                        <span>Leaderboard</span>
+                    </button>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="flex-1 p-6 pb-24">
+                <!-- Dashboard -->
+                <div id="page-dashboard" class="page animate-fade-in">
+                    <div class="mb-8">
+                        <h2 class="font-display text-3xl font-bold text-[#1a1a2e] mb-2">Dashboard</h2>
+                        <p class="text-gray-600">Pregled svih događaja u realnom vremenu</p>
+                    </div>
+
+                    <!-- Email Alert -->
+                    <div id="emailAlert" class="hidden mb-6 p-4 rounded-xl bg-gradient-to-r from-orange-100 to-amber-100 border border-orange-300 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-full bg-orange-500 flex items-center justify-center">
+                                <i class="fas fa-exclamation-triangle text-white text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-orange-800">Ne poslani QR kodovi</p>
+                                <p class="text-sm text-orange-600"><span id="pendingCount">0</span> učesnika čeka na email s QR kodom</p>
+                            </div>
+                        </div>
+                        <button onclick="app.navigate('emails')" class="px-6 py-3 rounded-lg bg-orange-600 text-white font-medium hover:bg-orange-700 transition-all shadow-lg">
+                            Pošalji sada
+                        </button>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="glass stat-card rounded-xl p-6 border-l-4 border-[#C8A951]">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500 mb-1">Ukupno učesnika</p>
+                                    <p class="text-3xl font-bold text-[#1a1a2e]" id="stat-total-participants">0</p>
+                                </div>
+                                <div class="w-12 h-12 rounded-xl bg-[#C8A951]/10 flex items-center justify-center">
+                                    <i class="fas fa-users text-2xl text-[#C8A951]"></i>
+                                </div>
+                            </div>
+                            <div class="mt-4 flex items-center gap-2 text-sm">
+                                <span class="text-green-600 flex items-center gap-1">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span id="stat-checked-in">0</span> check-in
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="glass stat-card rounded-xl p-6 border-l-4 border-[#2BBCB3]">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500 mb-1">Email poslano</p>
+                                    <p class="text-3xl font-bold text-[#1a1a2e]" id="stat-emails-sent">0</p>
+                                </div>
+                                <div class="w-12 h-12 rounded-xl bg-[#2BBCB3]/10 flex items-center justify-center">
+                                    <i class="fas fa-envelope text-2xl text-[#2BBCB3]"></i>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-sm text-gray-500">
+                                <span id="stat-emails-pending">0</span> neposlanih
+                            </div>
+                        </div>
+
+                        <div class="glass stat-card rounded-xl p-6 border-l-4 border-purple-500">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500 mb-1">Odigranih kvizova</p>
+                                    <p class="text-3xl font-bold text-[#1a1a2e]" id="stat-quizzes">0</p>
+                                </div>
+                                <div class="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
+                                    <i class="fas fa-gamepad text-2xl text-purple-600"></i>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-sm text-gray-500">
+                                Prosek: <span id="stat-avg-score">0</span>%
+                            </div>
+                        </div>
+
+                        <div class="glass stat-card rounded-xl p-6 border-l-4 border-orange-500">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500 mb-1">Aktivni sada</p>
+                                    <p class="text-3xl font-bold text-[#1a1a2e]" id="stat-active">0</p>
+                                </div>
+                                <div class="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
+                                    <i class="fas fa-bolt text-2xl text-orange-600"></i>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-sm text-gray-500">
+                                Instalirano: <span id="stat-installed">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                        <div class="lg:col-span-2">
+                            <div class="glass rounded-xl p-6">
+                                <h3 class="font-display text-xl font-bold text-[#1a1a2e] mb-4">Pregled po gradovima</h3>
+                                <div class="space-y-4" id="events-overview"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="glass rounded-xl p-6">
+                                <h3 class="font-display text-xl font-bold text-[#1a1a2e] mb-4">Top 5 Leaderboard</h3>
+                                <div class="space-y-3" id="mini-leaderboard"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="font-display text-xl font-bold text-[#1a1a2e] mb-4">Aktivnosti u realnom vremenu</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="text-left text-sm text-gray-500 border-b border-gray-200">
+                                        <th class="pb-3 font-medium">Vrijeme</th>
+                                        <th class="pb-3 font-medium">Učesnik</th>
+                                        <th class="pb-3 font-medium">Akcija</th>
+                                        <th class="pb-3 font-medium">Detalji</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="activity-log" class="text-sm"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Events Page -->
+                <div id="page-events" class="page hidden animate-fade-in">
+                    <div class="mb-8 flex items-center justify-between">
+                        <div>
+                            <h2 class="font-display text-3xl font-bold text-[#1a1a2e] mb-2">Događaji</h2>
+                            <p class="text-gray-600">Tri edukativna događaja</p>
+                        </div>
+                        <button onclick="app.addEvent()" class="btn-primary px-6 py-3 rounded-xl flex items-center gap-2 shadow-lg">
+                            <i class="fas fa-plus"></i>
+                            Dodaj događaj
+                        </button>
+                    </div>
+                    <div id="events-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                </div>
+
+                <!-- Sponsors Page -->
+                <div id="page-sponsors" class="page hidden animate-fade-in">
+                    <div class="mb-8 flex items-center justify-between">
+                        <div>
+                            <h2 class="font-display text-3xl font-bold text-[#1a1a2e] mb-2">Sponzori</h2>
+                            <p class="text-gray-600">Ekskluzivni i Summer Vibes partneri</p>
+                        </div>
+                        <button onclick="app.addSponsor()" class="btn-primary px-6 py-3 rounded-xl flex items-center gap-2 shadow-lg">
+                            <i class="fas fa-plus"></i>
+                            Dodaj sponzora
+                        </button>
+                    </div>
+                    <div id="sponsors-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+                </div>
+
+                <!-- Participants Page -->
+                <div id="page-participants" class="page hidden animate-fade-in">
+                    <div class="mb-8">
+                        <h2 class="font-display text-3xl font-bold text-[#1a1a2e] mb-2">Učesnici</h2>
+                        <p class="text-gray-600">Upravljanje učesnicima i QR kodovima</p>
+                    </div>
+                    
+                    <div class="glass rounded-xl p-6 mb-6">
+                        <div class="flex flex-wrap gap-4 items-center justify-between">
+                            <div class="flex gap-4 items-center">
+                                <input type="file" id="csvImport" accept=".csv" class="hidden" onchange="app.importCSV(this)">
+                                <button onclick="document.getElementById('csvImport').click()" class="btn-primary px-4 py-2 rounded-lg flex items-center gap-2">
+                                    <i class="fas fa-file-csv"></i>
+                                    Uvezi CSV
+                                </button>
+                                <button onclick="app.exportCSV()" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 flex items-center gap-2 hover:bg-gray-200 transition-all">
+                                    <i class="fas fa-download"></i>
+                                    Export CSV
+                                </button>
+                                <button onclick="app.addParticipant()" class="btn-turquoise px-4 py-2 rounded-lg flex items-center gap-2">
+                                    <i class="fas fa-user-plus"></i>
+                                    Ručno dodaj
+                                </button>
+                            </div>
+                            <div class="flex gap-2">
+                                <input type="text" id="participantSearch" placeholder="Pretraži..." class="form-input w-64" onkeyup="app.searchParticipants()">
+                                <select id="eventFilter" class="form-input w-48" onchange="app.filterParticipants()">
+                                    <option value="">Svi događaji</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-xl overflow-hidden">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr class="text-left text-sm font-medium text-gray-600">
+                                    <th class="px-6 py-4">Ime</th>
+                                    <th class="px-6 py-4">Email</th>
+                                    <th class="px-6 py-4">Grad</th>
+                                    <th class="px-6 py-4">Apoteka</th>
+                                    <th class="px-6 py-4">QR Kod</th>
+                                    <th class="px-6 py-4">Email</th>
+                                    <th class="px-6 py-4">Status</th>
+                                    <th class="px-6 py-4 text-right">Akcije</th>
+                                </tr>
+                            </thead>
+                            <tbody id="participants-table" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Emails Page -->
+                <div id="page-emails" class="page hidden animate-fade-in">
+                    <div class="mb-8">
+                        <h2 class="font-display text-3xl font-bold text-[#1a1a2e] mb-2">Slanje QR Kodova Emailom</h2>
+                        <p class="text-gray-600">Upravljanje slanjem QR kodova učesnicima</p>
+                    </div>
+
+                    <div class="glass rounded-xl p-6 mb-6">
+                        <div class="flex flex-wrap gap-4 items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="custom-checkbox" id="selectAllCheckbox" onclick="app.toggleSelectAll()"></div>
+                                <span class="font-medium text-[#1a1a2e]">Označi sve neposlane</span>
+                            </div>
+                            <div class="flex gap-3">
+                                <button onclick="app.sendSelectedEmails()" class="btn-primary px-6 py-3 rounded-lg flex items-center gap-2" id="sendSelectedBtn" disabled>
+                                    <i class="fas fa-paper-plane"></i>
+                                    Pošalji označene (<span id="selectedCount">0</span>)
+                                </button>
+                                <button onclick="app.sendAllPendingEmails()" class="btn-turquoise px-6 py-3 rounded-lg flex items-center gap-2">
+                                    <i class="fas fa-paper-plane"></i>
+                                    Pošalji sve neposlane
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div class="glass rounded-xl p-6 text-center border-l-4 border-green-500">
+                            <p class="text-sm text-gray-500 mb-1">Poslano</p>
+                            <p class="text-4xl font-bold text-green-600" id="emailSentCount">0</p>
+                        </div>
+                        <div class="glass rounded-xl p-6 text-center border-l-4 border-red-500">
+                            <p class="text-sm text-gray-500 mb-1">Neposlano</p>
+                            <p class="text-4xl font-bold text-red-600" id="emailPendingCount">0</p>
+                        </div>
+                        <div class="glass rounded-xl p-6 text-center border-l-4 border-[#C8A951]">
+                            <p class="text-sm text-gray-500 mb-1">Ukupno</p>
+                            <p class="text-4xl font-bold text-[#C8A951]" id="emailTotalCount">0</p>
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-xl p-4 mb-6">
+                        <div class="flex gap-2 items-center">
+                            <span class="text-sm font-medium text-gray-600">Prikaži:</span>
+                            <button onclick="app.filterEmailList('all')" class="tab-btn active" data-filter="all">Sve</button>
+                            <button onclick="app.filterEmailList('pending')" class="tab-btn" data-filter="pending">Neposlane</button>
+                            <button onclick="app.filterEmailList('sent')" class="tab-btn" data-filter="sent">Poslane</button>
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-xl overflow-hidden">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr class="text-left text-sm font-medium text-gray-600">
+                                    <th class="px-4 py-4 w-12"></th>
+                                    <th class="px-4 py-4">Učesnik</th>
+                                    <th class="px-4 py-4">Email</th>
+                                    <th class="px-4 py-4">Događaj</th>
+                                    <th class="px-4 py-4">QR Kod</th>
+                                    <th class="px-4 py-4">Status</th>
+                                    <th class="px-4 py-4">Poslano</th>
+                                    <th class="px-4 py-4">Akcije</th>
+                                </tr>
+                            </thead>
+                            <tbody id="email-list" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Questions Page -->
+                <div id="page-questions" class="page hidden animate-fade-in">
+                    <div class="mb-8 flex items-center justify-between">
+                        <div>
+                            <h2 class="font-display text-3xl font-bold text-[#1a1a2e] mb-2">Pitanja</h2>
+                            <p class="text-gray-600">Kreiranje kviz pitanja po sponzorima (20 po sponzoru)</p>
+                        </div>
+                    </div>
+                    <div id="questions-container" class="space-y-6"></div>
+                </div>
+
+                <!-- Leaderboard Page -->
+                <div id="page-leaderboard" class="page hidden animate-fade-in">
+                    <div class="mb-8">
+                        <h2 class="font-display text-3xl font-bold text-[#1a1a2e] mb-2">Leaderboard</h2>
+                        <p class="text-gray-600">Live rang lista učesnika</p>
+                    </div>
+                    <div class="glass rounded-xl p-8">
+                        <div id="full-leaderboard" class="space-y-4"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modalOverlay" class="fixed inset-0 z-50 hidden modal-overlay flex items-center justify-center p-4">
+        <div id="modalContent" class="glass bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl"></div>
+    </div>
+
+    <div id="largeModalOverlay" class="fixed inset-0 z-50 hidden modal-overlay flex items-center justify-center p-4">
+        <div id="largeModalContent" class="glass bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"></div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <script src="admin.js"></script>
+    <script>
