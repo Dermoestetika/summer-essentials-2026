@@ -59,7 +59,6 @@ function showSection(id) {
   if (id === 'dashboard') renderDashboard();
   if (id === 'participants') renderParticipants();
   if (id === 'qrCodes') renderQRCodes();
-  if (id === 'leaderboard') renderLeaderboard();
 }
 
 function renderDashboard() {
@@ -98,7 +97,7 @@ function renderParticipants() {
       <td>${p.city}</td>
       <td>${p.qrCode}</td>
       <td>${p.emailSent ? '✅' : '❌'}</td>
-      <td><button onclick="sendOneEmail(${p.id})" style="padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">📧 Pošalji</button></td>
+      <td><button onclick="sendOneEmail(${p.id})" style="padding:5px 10px;background:#667eea;color:white;border:none;border-radius:4px;cursor:pointer;">📧 Pošalji</button></td>
     </tr>
   `).join('') || '<tr><td colspan="8">Nema učesnika</td></tr>';
 }
@@ -168,67 +167,33 @@ function renderQRCodes() {
   const pending = total - sent;
   
   div.innerHTML = `
-    <div style="padding: 20px; background: #f5f5f5; border-radius: 8px; margin-bottom: 20px;">
-      <div style="display: flex; gap: 30px; margin-bottom: 15px; font-size: 18px;">
+    <div style="padding:20px;background:#f5f5f5;border-radius:8px;margin-bottom:20px;">
+      <div style="display:flex;gap:30px;margin-bottom:15px;font-size:18px;">
         <div>👥 <strong>Ukupno:</strong> ${total}</div>
         <div>✅ <strong>Poslano:</strong> ${sent}</div>
         <div>⏳ <strong>Čeka:</strong> ${pending}</div>
       </div>
-      <div style="display: flex; gap: 10px;">
-        <button onclick="sendTest()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">📧 Test Email</button>
-        <button onclick="sendAllPending()" ${pending === 0 ? 'disabled' : ''} style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; ${pending === 0 ? 'opacity: 0.5;' : ''}">
-          🚀 Pošalji svih ${pending} emailova
-        </button>
+      <div style="display:flex;gap:10px;">
+        <button onclick="sendTest()" style="padding:10px 20px;background:#6c757d;color:white;border:none;border-radius:4px;cursor:pointer;">📧 Test Email</button>
+        <button onclick="sendAllPending()" ${pending === 0 ? 'disabled' : ''} style="padding:10px 20px;background:#28a745;color:white;border:none;border-radius:4px;cursor:pointer;${pending === 0 ? 'opacity:0.5;' : ''}">🚀 Pošalji svih ${pending} emailova</button>
       </div>
     </div>
-    <table class="data-table" style="width: 100%; border-collapse: collapse;">
-      <thead style="background: #f8f9fa;">
-        <tr><th style="padding: 12px; text-align: left;">Učesnik</th><th>Email</th><th>Grad</th><th>QR Kod</th><th>Status</th><th>Akcija</th></tr>
+    <table class="data-table" style="width:100%;border-collapse:collapse;">
+      <thead style="background:#f8f9fa;">
+        <tr><th style="padding:12px;">Učesnik</th><th>Email</th><th>Grad</th><th>QR Kod</th><th>Status</th><th>Akcija</th></tr>
       </thead>
       <tbody>
         ${currentData.participants?.map(p => `
-          <tr style="border-bottom: 1px solid #dee2e6;">
-            <td style="padding: 12px;">${p.name}</td>
+          <tr style="border-bottom:1px solid #dee2e6;">
+            <td style="padding:12px;">${p.name}</td>
             <td>${p.email}</td>
             <td>${p.city}</td>
             <td><code>${p.qrCode}</code></td>
             <td>${p.emailSent ? '✅ Poslano' : '⏳ Čeka'}</td>
-            <td>
-              <button onclick="sendOneEmail(${p.id})" style="padding: 5px 10px; background: ${p.emailSent ? '#6c757d' : '#667eea'}; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                ${p.emailSent ? 'Ponovi' : '📧 Pošalji'}
-              </button>
-            </td>
+            <td><button onclick="sendOneEmail(${p.id})" style="padding:5px 10px;background:${p.emailSent ? '#6c757d' : '#667eea'};color:white;border:none;border-radius:4px;cursor:pointer;">${p.emailSent ? 'Ponovi' : '📧 Pošalji'}</button></td>
           </tr>
-        `).join('') || '<tr><td colspan="6" style="padding: 20px; text-align: center;">Nema učesnika</td></tr>'}
+        `).join('') || '<tr><td colspan="6" style="padding:20px;text-align:center;">Nema učesnika</td></tr>'}
       </tbody>
     </table>
   `;
 }
-
-async function renderLeaderboard() {
-  const tbody = document.getElementById('leaderboardList');
-  if (!tbody) return;
-  
-  try {
-    const r = await fetch(`/api/leaderboard?eventId=${currentEventId}`);
-    const list = await r.json();
-    tbody.innerHTML = list.map((p, i) => `
-      <tr>
-        <td style="font-weight: bold;">${i + 1}</td>
-        <td>${p.name}</td>
-        <td>${getEventName(p.eventId)}</td>
-        <td>${p.city}</td>
-        <td style="font-weight: bold; color: #667eea;">${p.score || 0}</td>
-      </tr>
-    `).join('') || '<tr><td colspan="5">Nema podataka</td></tr>';
-  } catch (e) {
-    tbody.innerHTML = '<tr><td colspan="5">Greška</td></tr>';
-  }
-}
-
-// Auto refresh
-setInterval(() => {
-  if (document.visibilityState === 'visible' && sessionStorage.getItem('adminLoggedIn')) {
-    loadData();
-  }
-}, 30000);
