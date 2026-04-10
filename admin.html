@@ -764,3 +764,746 @@
 
     <script src="admin.js"></script>
     <script>
+
+    const app = {
+        data: { events: [], participants: [], sponsors: [], questions: [], settings: {} },
+        currentPage: 'dashboard',
+        selectedParticipants: new Set(),
+        emailFilter: 'all',
+
+        async init() {
+            await this.loadData();
+            const form = document.getElementById('loginForm');
+            if (form) form.addEventListener('submit', (e) => { e.preventDefault(); this.login(); });
+            if (sessionStorage.getItem('adminLoggedIn')) {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                this.navigate('dashboard');
+            }
+        },
+
+        login() {
+            const email = document.getElementById('loginEmail')?.value;
+            const pass = document.getElementById('loginPassword')?.value;
+            if (email === 'admin@anapharm.ba' && pass === 'admin2026') {
+                sessionStorage.setItem('adminLoggedIn', 'true');
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                this.navigate('dashboard');
+            } else {
+                const err = document.getElementById('loginError');
+                if (err) err.classList.remove('hidden');
+            }
+        },
+
+        logout() {
+            sessionStorage.removeItem('adminLoggedIn');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+        },
+
+        async loadData() {
+            try { const r = await fetch('/api/data'); if (r.ok) this.data = await r.json(); } catch(e) { console.error(e); }
+        },
+
+        async saveData() {
+            try { await fetch('/api/data', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(this.data) }); } catch(e) { console.error(e); }
+        },
+
+        navigate(page) {
+            this.currentPage = page;
+            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+            const t = document.getElementById('page-' + page);
+            if (t) t.classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(n => { n.classList.remove('active'); n.classList.add('text-gray-600'); });
+            const btn = document.querySelector('[data-page="'+page+'"]');
+            if (btn) { btn.classList.add('active'); btn.classList.remove('text-gray-600'); }
+            this.renderPage(page);
+        },
+
+        renderPage(page) {
+            switch(page) {
+                case 'dashboard': this.renderDashboard(); break;
+                case 'events': this.renderEvents(); break;
+                case 'sponsors': this.renderSponsors(); break;
+                case 'participants': this.renderParticipants(); break;
+                case 'emails': this.renderEmailPage(); break;
+                case 'questions': this.renderQuestions(); break;
+                case 'leaderboard': this.renderLeaderboard(); break;
+            }
+        },
+
+        renderDashboard() {
+            const p = this.data.participants || [];
+            const total = p.length;
+            const checkedIn = p.filter(x => x.checkedIn).length;
+            const sent = p.filter(x => x.emailSent).length;
+            const pending = total - sent;
+            this.setText('stat-total-participants', total);
+            this.setText('stat-checked-in', checkedIn);
+            this.setText('stat-emails-sent', sent);
+            this.setText('stat-emails-pending', pending);
+            this.setText('stat-quizzes', p.filter(x => x.quizCompleted).length);
+            this.setText('stat-avg-score', this.calcAvg());
+            this.setText('stat-active', p.filter(x => x.isActive).length);
+            this.setText('stat-installed', p.filter(x => x.appInstalled).length);
+            const alert = document.getElementById('emailAlert');
+            if (alert) { if (pending > 0) { alert.classList.remove('hidden'); this.setText('pendingCount', pending); } else { alert.classList.add('hidden'); } }
+            const badge = document.getElementById('emailBadge');
+            if (badge) { if (pending > 0) { badge.classList.remove('hidden'); badge.textContent = pending; } else badge.classList.add('hidden'); }
+            this.renderEventsOverview();
+            this.renderMiniLeaderboard();
+            const log = document.getElementById('activity-log');
+            if (log) log.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-gray-400">Nema nedavnih aktivnosti</td></tr>';
+        },
+
+        calcAvg() { const s = (this.data.participants||[]).filter(p=>p.quizScore!=null); return s.length ? Math.round(s.reduce((a,p)=>a+p.quizScore,0)/s.length) : 0; },
+
+        renderEventsOverview() {
+            const el = document.getElementById('events-overview');
+            if (!el) return;
+            el.innerHTML = (this.data.events||[]).map(ev => {
+                const pc = (this.data.participants||[]).filter(p=>p.eventId==ev.id).length;
+                const ci = (this.data.participants||[]).filter(p=>p.eventId==ev.id&&p.checkedIn).length;
+                const pct = pc>0?Math.round(ci/pc*100):0;
+                return '<div class="flex items-center justify-between p-4 rounded-xl bg-gray-50"><div><p class="font-semibold text-[#1a1a2e]">'+(ev.name||ev.city||'Event')+'</p><p class="text-sm text-gray-500">'+(ev.date||'')+' - '+(ev.city||'')+'</p></div><div class="text-right"><p class="font-bold text-lg">'+ci+'/'+pc+'</p><div class="progress-bar w-24 mt-1"><div class="progress-fill gradient-gold" style="width:'+pct+'%"></div></div></div></div>';
+            }).join('');
+        },
+
+        renderMiniLeaderboard() {
+            const el = document.getElementById('mini-leaderboard');
+            if (!el) return;
+            const sorted = [...(this.data.participants||[])].filter(p=>p.totalPoints!=null).sort((a,b)=>(b.totalPoints||0)-(a.totalPoints||0)).slice(0,5);
+            el.innerHTML = sorted.map((p,i) => '<div class="flex items-center justify-between p-3 rounded-lg '+(i===0?'bg-[#C8A951]/10':'bg-gray-50')+'"><div class="flex items-center gap-3"><span class="font-bold text-lg '+(i===0?'text-[#C8A951]':'text-gray-400')+'">#'+(i+1)+'</span><span class="font-medium">'+p.name+'</span></div><span class="font-bold '+(i===0?'text-[#C8A951]':'text-gray-600')+'">'+(p.totalPoints||0)+' pts</span></div>').join('');
+        },
+
+        renderEvents() {
+            const el = document.getElementById('events-list');
+            if (!el) return;
+            el.innerHTML = (this.data.events||[]).map(ev => {
+                const pc = (this.data.participants||[]).filter(p=>p.eventId==ev.id).length;
+                return '<div class="glass rounded-xl overflow-hidden stat-card"><div class="gradient-dark p-6 text-white"><h3 class="font-display text-xl font-bold">'+(ev.name||ev.city)+'</h3><p class="text-gray-300 mt-1">'+(ev.date||'')+'</p></div><div class="p-6 space-y-3"><div class="flex justify-between text-sm"><span class="text-gray-500">Grad:</span><span class="font-medium">'+(ev.city||'-')+'</span></div><div class="flex justify-between text-sm"><span class="text-gray-500">Učesnici:</span><span class="font-bold text-[#C8A951]">'+pc+'</span></div></div></div>';
+            }).join('') || '<p class="text-gray-500 col-span-3 text-center py-8">Nema događaja</p>';
+        },
+
+        addEvent() {
+            this.showModal('Dodaj događaj', '<div class="p-6 space-y-4"><div><label class="form-label">Naziv</label><input type="text" id="eventName" class="form-input"></div><div><label class="form-label">Grad</label><input type="text" id="eventCity" class="form-input"></div><div><label class="form-label">Datum</label><input type="date" id="eventDate" class="form-input"></div><button onclick="app.saveEvent()" class="w-full btn-primary py-3 rounded-lg">Sačuvaj</button></div>');
+        },
+
+        async saveEvent() {
+            const ev = { id: Date.now(), name: document.getElementById('eventName')?.value||'', city: document.getElementById('eventCity')?.value||'', date: document.getElementById('eventDate')?.value||'' };
+            if (!this.data.events) this.data.events = [];
+            this.data.events.push(ev);
+            await this.saveData(); this.closeModal(); this.renderEvents(); this.showToast('Događaj dodan!','success');
+        },
+
+        // ---- SPONSORS ----
+        renderSponsors() {
+            const el = document.getElementById('sponsors-list');
+            if (!el) return;
+            const sponsors = this.data.sponsors || [];
+            el.innerHTML = sponsors.map(s => `
+                <div class="glass rounded-xl p-6 stat-card">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-14 h-14 rounded-xl ${s.tier === 'exclusive' ? 'gradient-gold' : 'gradient-turquoise'} flex items-center justify-center">
+                            <i class="fas fa-building text-xl ${s.tier === 'exclusive' ? 'text-[#1a1a2e]' : 'text-white'}"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-display text-lg font-bold">${s.name || ''}</h3>
+                            <span class="text-xs px-2 py-1 rounded-full ${s.tier === 'exclusive' ? 'tier-badge-1' : 'tier-badge-2'}">${s.tier || 'summer vibes'}</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-500">${s.description || ''}</p>
+                </div>
+            `).join('') || '<p class="text-gray-500 col-span-2 text-center py-8">Nema sponzora</p>';
+        },
+
+        addSponsor() {
+            this.showModal('Dodaj sponzora', `
+                <div class="p-6 space-y-4">
+                    <div><label class="form-label">Naziv</label><input type="text" id="sponsorName" class="form-input"></div>
+                    <div><label class="form-label">Tier</label>
+                        <select id="sponsorTier" class="form-input">
+                            <option value="exclusive">Exclusive</option>
+                            <option value="summer_vibes">Summer Vibes</option>
+                        </select>
+                    </div>
+                    <div><label class="form-label">Opis</label><textarea id="sponsorDesc" class="form-input" rows="3"></textarea></div>
+                    <button onclick="app.saveSponsor()" class="w-full btn-primary py-3 rounded-lg">Sacuvaj</button>
+                </div>
+            `);
+        },
+
+        async saveSponsor() {
+            const s = {
+                id: Date.now(),
+                name: document.getElementById('sponsorName')?.value || '',
+                tier: document.getElementById('sponsorTier')?.value || 'summer_vibes',
+                description: document.getElementById('sponsorDesc')?.value || ''
+            };
+            if (!this.data.sponsors) this.data.sponsors = [];
+            this.data.sponsors.push(s);
+            await this.saveData();
+            this.closeModal();
+            this.renderSponsors();
+            this.showToast('Sponzor dodan!', 'success');
+        },
+
+        // ---- PARTICIPANTS ----
+        renderParticipants() {
+            const tbody = document.getElementById('participants-table');
+            if (!tbody) return;
+            const filter = document.getElementById('eventFilter');
+            if (filter && filter.options.length <= 1) {
+                (this.data.events || []).forEach(ev => {
+                    const opt = document.createElement('option');
+                    opt.value = ev.id;
+                    opt.textContent = ev.name || ev.city;
+                    filter.appendChild(opt);
+                });
+            }
+            let list = this.data.participants || [];
+            const searchVal = document.getElementById('participantSearch')?.value?.toLowerCase() || '';
+            const eventVal = document.getElementById('eventFilter')?.value || '';
+            if (searchVal) list = list.filter(p => (p.name || '').toLowerCase().includes(searchVal) || (p.email || '').toLowerCase().includes(searchVal));
+            if (eventVal) list = list.filter(p => p.eventId == eventVal);
+            tbody.innerHTML = list.map(p => `
+                <tr class="table-row">
+                    <td class="px-6 py-4 font-medium">${p.name || ''}</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">${p.email || ''}</td>
+                    <td class="px-6 py-4 text-sm">${p.city || ''}</td>
+                    <td class="px-6 py-4 text-sm">${p.pharmacy || p.apoteka || ''}</td>
+                    <td class="px-6 py-4"><code class="text-xs bg-gray-100 px-2 py-1 rounded">${p.qrCode || '-'}</code></td>
+                    <td class="px-6 py-4">
+                        <span class="text-xs px-2 py-1 rounded-full ${p.emailSent ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                            ${p.emailSent ? 'Poslano' : 'Nije'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-xs px-2 py-1 rounded-full ${p.checkedIn ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">
+                            ${p.checkedIn ? 'Prijavljen' : 'Ceka'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex gap-1 justify-end">
+                            <div class="action-btn edit" onclick="app.editParticipant(${p.id})"><i class="fas fa-edit text-xs"></i></div>
+                            <div class="action-btn qr" onclick="app.showQR(${p.id})"><i class="fas fa-qrcode text-xs"></i></div>
+                            <div class="action-btn email" onclick="app.sendEmailToParticipant(${p.id})"><i class="fas fa-envelope text-xs"></i></div>
+                            <div class="action-btn delete" onclick="app.deleteParticipant(${p.id})"><i class="fas fa-trash text-xs"></i></div>
+                        </div>
+                    </td>
+                </tr>
+            `).join('') || '<tr><td colspan="8" class="px-6 py-8 text-center text-gray-400">Nema ucesnika</td></tr>';
+        },
+
+        searchParticipants() { this.renderParticipants(); },
+        filterParticipants() { this.renderParticipants(); },
+
+        addParticipant() {
+            this.showModal('Dodaj ucesnika', `
+                <div class="p-6 space-y-4">
+                    <div><label class="form-label">Ime i prezime</label><input type="text" id="pName" class="form-input"></div>
+                    <div><label class="form-label">Email</label><input type="email" id="pEmail" class="form-input"></div>
+                    <div><label class="form-label">Grad</label><input type="text" id="pCity" class="form-input"></div>
+                    <div><label class="form-label">Apoteka</label><input type="text" id="pPharmacy" class="form-input"></div>
+                    <div><label class="form-label">Dogadjaj</label>
+                        <select id="pEvent" class="form-input">
+                            ${(this.data.events || []).map(ev => \`<option value="${ev.id}">${ev.name || ev.city}</option>\`).join('')}
+                        </select>
+                    </div>
+                    <button onclick="app.saveParticipant()" class="w-full btn-primary py-3 rounded-lg">Sacuvaj</button>
+                </div>
+            `);
+        },
+
+        async saveParticipant() {
+            const p = {
+                id: Date.now(),
+                name: document.getElementById('pName')?.value || '',
+                email: document.getElementById('pEmail')?.value || '',
+                city: document.getElementById('pCity')?.value || '',
+                pharmacy: document.getElementById('pPharmacy')?.value || '',
+                eventId: document.getElementById('pEvent')?.value || '',
+                qrCode: 'QR-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+                emailSent: false,
+                checkedIn: false
+            };
+            if (!this.data.participants) this.data.participants = [];
+            this.data.participants.push(p);
+            await this.saveData();
+            this.closeModal();
+            this.renderParticipants();
+            this.showToast('Ucesnik dodan!', 'success');
+        },
+
+        editParticipant(id) {
+            const p = (this.data.participants || []).find(x => x.id === id);
+            if (!p) return;
+            this.showModal('Uredi ucesnika', `
+                <div class="p-6 space-y-4">
+                    <div><label class="form-label">Ime</label><input type="text" id="pName" class="form-input" value="${p.name || ''}"></div>
+                    <div><label class="form-label">Email</label><input type="email" id="pEmail" class="form-input" value="${p.email || ''}"></div>
+                    <div><label class="form-label">Grad</label><input type="text" id="pCity" class="form-input" value="${p.city || ''}"></div>
+                    <div><label class="form-label">Apoteka</label><input type="text" id="pPharmacy" class="form-input" value="${p.pharmacy || p.apoteka || ''}"></div>
+                    <button onclick="app.updateParticipant(${id})" class="w-full btn-primary py-3 rounded-lg">Azuriraj</button>
+                </div>
+            `);
+        },
+
+        async updateParticipant(id) {
+            const p = (this.data.participants || []).find(x => x.id === id);
+            if (!p) return;
+            p.name = document.getElementById('pName')?.value || p.name;
+            p.email = document.getElementById('pEmail')?.value || p.email;
+            p.city = document.getElementById('pCity')?.value || p.city;
+            p.pharmacy = document.getElementById('pPharmacy')?.value || p.pharmacy;
+            await this.saveData();
+            this.closeModal();
+            this.renderParticipants();
+            this.showToast('Ucesnik azuriran!', 'success');
+        },
+
+        async deleteParticipant(id) {
+            if (!confirm('Obrisati ovog ucesnika?')) return;
+            this.data.participants = (this.data.participants || []).filter(p => p.id !== id);
+            await this.saveData();
+            this.renderParticipants();
+            this.showToast('Ucesnik obrisan', 'warning');
+        },
+
+        showQR(id) {
+            const p = (this.data.participants || []).find(x => x.id === id);
+            if (!p) return;
+            this.showModal('QR Kod', `
+                <div class="p-6 text-center">
+                    <h3 class="font-display text-xl font-bold mb-2">${p.name}</h3>
+                    <p class="text-gray-500 mb-4">${p.qrCode}</p>
+                    <div id="qrCodeDisplay" class="qr-preview mx-auto mb-4"></div>
+                    <button onclick="app.downloadQR(${p.id})" class="btn-primary px-6 py-2 rounded-lg">
+                        <i class="fas fa-download mr-2"></i>Preuzmi
+                    </button>
+                </div>
+            `);
+            setTimeout(() => {
+                const container = document.getElementById('qrCodeDisplay');
+                if (container && typeof QRCode !== 'undefined') {
+                    container.innerHTML = '';
+                    new QRCode(container, { text: p.qrCode, width: 200, height: 200 });
+                }
+            }, 100);
+        },
+
+        downloadQR(id) {
+            const p = (this.data.participants || []).find(x => x.id === id);
+            if (!p) return;
+            const canvas = document.querySelector('#qrCodeDisplay canvas');
+            if (canvas) {
+                const a = document.createElement('a');
+                a.download = \`QR-${p.name.replace(/\s+/g, '_')}.png\`;
+                a.href = canvas.toDataURL();
+                a.click();
+            }
+        },
+
+        // ---- EMAIL / QR CODES PAGE ----
+        renderEmailPage() {
+            this.selectedParticipants = new Set();
+            this.updateSelectedCount();
+            this.renderEmailStats();
+            this.renderEmailList();
+        },
+
+        renderEmailStats() {
+            const participants = this.data.participants || [];
+            const sent = participants.filter(p => p.emailSent).length;
+            const pending = participants.length - sent;
+            this.setText('emailSentCount', sent);
+            this.setText('emailPendingCount', pending);
+            this.setText('emailTotalCount', participants.length);
+        },
+
+        renderEmailList() {
+            const tbody = document.getElementById('email-list');
+            if (!tbody) return;
+            let list = this.data.participants || [];
+            if (this.emailFilter === 'pending') list = list.filter(p => !p.emailSent);
+            if (this.emailFilter === 'sent') list = list.filter(p => p.emailSent);
+            tbody.innerHTML = list.map(p => {
+                const isSelected = this.selectedParticipants.has(p.id);
+                const eventName = this.getEventName(p.eventId);
+                return `
+                <tr class="table-row">
+                    <td class="px-4 py-4">
+                        <div class="custom-checkbox ${isSelected ? 'checked' : ''}" onclick="app.toggleParticipantSelection(${p.id})"></div>
+                    </td>
+                    <td class="px-4 py-4 font-medium">${p.name || ''}</td>
+                    <td class="px-4 py-4 text-sm text-gray-600">${p.email || ''}</td>
+                    <td class="px-4 py-4 text-sm">${eventName}</td>
+                    <td class="px-4 py-4"><code class="text-xs bg-gray-100 px-2 py-1 rounded">${p.qrCode || '-'}</code></td>
+                    <td class="px-4 py-4">
+                        <span class="inline-flex items-center gap-1 text-xs px-3 py-1 rounded-full ${p.emailSent ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                            <i class="fas ${p.emailSent ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+                            ${p.emailSent ? 'Poslano' : 'Neposlano'}
+                        </span>
+                    </td>
+                    <td class="px-4 py-4 text-sm text-gray-500">${p.emailSentAt ? new Date(p.emailSentAt).toLocaleString('bs') : '-'}</td>
+                    <td class="px-4 py-4">
+                        <button onclick="app.sendEmailToParticipant(${p.id})" class="action-btn email">
+                            <i class="fas fa-paper-plane text-xs"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('') || '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-400">Nema ucesnika</td></tr>';
+        },
+
+        toggleParticipantSelection(id) {
+            if (this.selectedParticipants.has(id)) {
+                this.selectedParticipants.delete(id);
+            } else {
+                this.selectedParticipants.add(id);
+            }
+            this.renderEmailList();
+            this.updateSelectedCount();
+        },
+
+        toggleSelectAll() {
+            const pending = (this.data.participants || []).filter(p => !p.emailSent);
+            const checkbox = document.getElementById('selectAllCheckbox');
+            if (this.selectedParticipants.size === pending.length && pending.length > 0) {
+                this.selectedParticipants.clear();
+                if (checkbox) checkbox.classList.remove('checked');
+            } else {
+                pending.forEach(p => this.selectedParticipants.add(p.id));
+                if (checkbox) checkbox.classList.add('checked');
+            }
+            this.renderEmailList();
+            this.updateSelectedCount();
+        },
+
+        updateSelectedCount() {
+            this.setText('selectedCount', this.selectedParticipants.size);
+            const btn = document.getElementById('sendSelectedBtn');
+            if (btn) btn.disabled = this.selectedParticipants.size === 0;
+        },
+
+        filterEmailList(filter) {
+            this.emailFilter = filter;
+            document.querySelectorAll('[data-filter]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === filter);
+            });
+            this.renderEmailList();
+        },
+
+        async sendEmailToParticipant(id) {
+            if (!confirm('Poslati email ovom ucesniku?')) return;
+            try {
+                const r = await fetch('/api/send-qr-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ participantId: id })
+                });
+                const res = await r.json();
+                if (res.success) {
+                    const p = (this.data.participants || []).find(x => x.id === id);
+                    if (p) {
+                        p.emailSent = true;
+                        p.emailSentAt = new Date().toISOString();
+                    }
+                    this.showToast('Email poslan!', 'success');
+                    this.renderEmailPage();
+                    this.renderDashboard();
+                } else {
+                    this.showToast('Greska: ' + (res.error || 'Nepoznata greska'), 'error');
+                }
+            } catch (e) {
+                this.showToast('Greska: ' + e.message, 'error');
+            }
+        },
+
+        async sendSelectedEmails() {
+            if (this.selectedParticipants.size === 0) return;
+            if (!confirm('Poslati ' + this.selectedParticipants.size + ' emailova?')) return;
+            const ids = [...this.selectedParticipants];
+            try {
+                const r = await fetch('/api/send-bulk-qr-emails', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ participantIds: ids })
+                });
+                const res = await r.json();
+                const sent = res.results?.sent || 0;
+                const failed = res.results?.failed || 0;
+                this.showToast('Poslano: ' + sent + ', Neuspjesno: ' + failed, sent > 0 ? 'success' : 'error');
+                await this.loadData();
+                this.selectedParticipants.clear();
+                this.renderEmailPage();
+            } catch (e) {
+                this.showToast('Greska: ' + e.message, 'error');
+            }
+        },
+
+        async sendAllPendingEmails() {
+            const pending = (this.data.participants || []).filter(p => !p.emailSent && p.email);
+            if (pending.length === 0) {
+                this.showToast('Nema neposlanih emailova!', 'warning');
+                return;
+            }
+            if (!confirm('Poslati ' + pending.length + ' emailova?')) return;
+            try {
+                const r = await fetch('/api/send-bulk-qr-emails', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ participantIds: pending.map(p => p.id) })
+                });
+                const res = await r.json();
+                this.showToast('Poslano: ' + (res.results?.sent || 0), 'success');
+                await this.loadData();
+                this.renderEmailPage();
+            } catch (e) {
+                this.showToast('Greska: ' + e.message, 'error');
+            }
+        },
+
+        // ---- QUESTIONS ----
+        renderQuestions() {
+            const el = document.getElementById('questions-container');
+            if (!el) return;
+            const sponsors = this.data.sponsors || [];
+            el.innerHTML = sponsors.map(s => {
+                const questions = (this.data.questions || []).filter(q => q.sponsorId == s.id);
+                return `
+                <div class="glass rounded-xl overflow-hidden">
+                    <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg ${s.tier === 'exclusive' ? 'gradient-gold' : 'gradient-turquoise'} flex items-center justify-center">
+                                <i class="fas fa-building text-sm ${s.tier === 'exclusive' ? 'text-[#1a1a2e]' : 'text-white'}"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold">${s.name}</h3>
+                                <p class="text-sm text-gray-500">${questions.length}/20 pitanja</p>
+                            </div>
+                        </div>
+                        <button onclick="app.addQuestion(${s.id})" class="btn-turquoise px-4 py-2 rounded-lg text-sm">
+                            <i class="fas fa-plus mr-1"></i> Dodaj pitanje
+                        </button>
+                    </div>
+                    <div class="p-4 space-y-2">
+                        ${questions.map((q, i) => \`
+                            <div class="p-3 rounded-lg bg-gray-50 flex items-center justify-between">
+                                <span class="text-sm"><strong>${i + 1}.</strong> ${q.question}</span>
+                                <div class="action-btn delete" onclick="app.deleteQuestion(${q.id})">
+                                    <i class="fas fa-trash text-xs"></i>
+                                </div>
+                            </div>
+                        \`).join('') || '<p class="text-gray-400 text-sm text-center py-4">Nema pitanja za ovog sponzora</p>'}
+                    </div>
+                </div>`;
+            }).join('') || '<p class="text-gray-500 text-center py-8">Nema sponzora - dodajte sponzore prvo</p>';
+        },
+
+        addQuestion(sponsorId) {
+            this.showModal('Dodaj pitanje', `
+                <div class="p-6 space-y-4">
+                    <div><label class="form-label">Pitanje</label><textarea id="qQuestion" class="form-input" rows="2"></textarea></div>
+                    <div><label class="form-label">Tacan odgovor</label><input type="text" id="qCorrect" class="form-input"></div>
+                    <div><label class="form-label">Netacan 1</label><input type="text" id="qWrong1" class="form-input"></div>
+                    <div><label class="form-label">Netacan 2</label><input type="text" id="qWrong2" class="form-input"></div>
+                    <div><label class="form-label">Netacan 3</label><input type="text" id="qWrong3" class="form-input"></div>
+                    <button onclick="app.saveQuestion(${sponsorId})" class="w-full btn-primary py-3 rounded-lg">Sacuvaj</button>
+                </div>
+            `);
+        },
+
+        async saveQuestion(sponsorId) {
+            const q = {
+                id: Date.now(),
+                sponsorId: sponsorId,
+                question: document.getElementById('qQuestion')?.value || '',
+                correctAnswer: document.getElementById('qCorrect')?.value || '',
+                wrongAnswers: [
+                    document.getElementById('qWrong1')?.value || '',
+                    document.getElementById('qWrong2')?.value || '',
+                    document.getElementById('qWrong3')?.value || ''
+                ]
+            };
+            if (!this.data.questions) this.data.questions = [];
+            this.data.questions.push(q);
+            await this.saveData();
+            this.closeModal();
+            this.renderQuestions();
+            this.showToast('Pitanje dodano!', 'success');
+        },
+
+        async deleteQuestion(id) {
+            if (!confirm('Obrisati ovo pitanje?')) return;
+            this.data.questions = (this.data.questions || []).filter(q => q.id !== id);
+            await this.saveData();
+            this.renderQuestions();
+        },
+
+        // ---- LEADERBOARD ----
+        renderLeaderboard() {
+            const el = document.getElementById('full-leaderboard');
+            if (!el) return;
+            const sorted = [...(this.data.participants || [])]
+                .filter(p => p.totalPoints != null || p.quizScore != null)
+                .sort((a, b) => (b.totalPoints || b.quizScore || 0) - (a.totalPoints || a.quizScore || 0));
+            el.innerHTML = sorted.map((p, i) => {
+                const tier = i < 3 ? 1 : i < 10 ? 2 : 3;
+                return `
+                <div class="flex items-center justify-between p-4 rounded-xl ${i < 3 ? 'glass border border-[#C8A951]/30' : 'bg-gray-50'}">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full ${i === 0 ? 'gradient-gold' : i === 1 ? 'bg-gray-300' : i === 2 ? 'bg-amber-600' : 'bg-gray-200'} flex items-center justify-center font-bold ${i < 3 ? 'text-white' : 'text-gray-600'}">
+                            ${i + 1}
+                        </div>
+                        <div>
+                            <p class="font-semibold">${p.name}</p>
+                            <p class="text-sm text-gray-500">${p.city || ''}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="tier-badge-${tier} text-xs px-3 py-1 rounded-full">Tier ${tier}</span>
+                        <span class="font-bold text-lg">${p.totalPoints || p.quizScore || 0} pts</span>
+                    </div>
+                </div>`;
+            }).join('') || '<p class="text-gray-400 text-center py-8">Nema podataka za leaderboard</p>';
+        },
+
+        // ---- CSV IMPORT/EXPORT ----
+        importCSV(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const text = e.target.result;
+                const lines = text.split('\n').filter(l => l.trim());
+                if (lines.length < 2) return this.showToast('CSV je prazan', 'error');
+                const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+                const newParticipants = [];
+                for (let i = 1; i < lines.length; i++) {
+                    const vals = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+                    const obj = {};
+                    headers.forEach((h, j) => obj[h] = vals[j] || '');
+                    newParticipants.push({
+                        id: Date.now() + i,
+                        name: obj.name || obj.ime || ((obj.firstname || '') + ' ' + (obj.lastname || '')).trim(),
+                        email: obj.email || '',
+                        city: obj.city || obj.grad || '',
+                        pharmacy: obj.pharmacy || obj.apoteka || '',
+                        eventId: obj.eventid || obj.event_id || '',
+                        qrCode: obj.qrcode || obj.qr || 'QR-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+                        emailSent: false,
+                        checkedIn: false
+                    });
+                }
+                if (!this.data.participants) this.data.participants = [];
+                this.data.participants.push(...newParticipants);
+                await this.saveData();
+                this.renderParticipants();
+                this.showToast('Uvezeno ' + newParticipants.length + ' ucesnika!', 'success');
+            };
+            reader.readAsText(file);
+            input.value = '';
+        },
+
+        exportCSV() {
+            const list = this.data.participants || [];
+            if (list.length === 0) return this.showToast('Nema podataka za export', 'warning');
+            const headers = ['name', 'email', 'city', 'pharmacy', 'eventId', 'qrCode', 'emailSent', 'checkedIn'];
+            const csv = [headers.join(','), ...list.map(p => headers.map(h => '"' + (p[h] || '') + '"').join(','))].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'participants-export.csv';
+            a.click();
+        },
+
+        // ---- EXPORT / IMPORT DATA ----
+        exportData() {
+            const blob = new Blob([JSON.stringify(this.data, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'summer-essentials-backup.json';
+            a.click();
+            this.showToast('Backup exportovan!', 'success');
+        },
+
+        importData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const text = await file.text();
+                try {
+                    this.data = JSON.parse(text);
+                    await this.saveData();
+                    this.navigate(this.currentPage);
+                    this.showToast('Podaci importovani!', 'success');
+                } catch (err) {
+                    this.showToast('Neispravan JSON fajl', 'error');
+                }
+            };
+            input.click();
+        },
+
+        // ---- HELPERS ----
+        getEventName(eventId) {
+            const ev = (this.data.events || []).find(e => e.id == eventId);
+            return ev?.name || ev?.city || '-';
+        },
+
+        setText(id, value) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value;
+        },
+
+        showModal(title, content) {
+            const overlay = document.getElementById('modalOverlay');
+            const mc = document.getElementById('modalContent');
+            if (!overlay || !mc) return;
+            mc.innerHTML = `
+                <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                    <h3 class="font-display text-xl font-bold">${title}</h3>
+                    <button onclick="app.closeModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+                </div>
+                ${content}
+            `;
+            overlay.classList.remove('hidden');
+        },
+
+        closeModal() {
+            document.getElementById('modalOverlay')?.classList.add('hidden');
+            document.getElementById('largeModalOverlay')?.classList.add('hidden');
+        },
+
+        showToast(message, type) {
+            type = type || 'success';
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-exclamation-triangle';
+            toast.innerHTML = '<i class="fas ' + icon + ' mr-2"></i>' + message;
+            container.appendChild(toast);
+            requestAnimationFrame(() => toast.classList.add('show'));
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    };
+
+    // Initialize on DOM ready
+    document.addEventListener('DOMContentLoaded', () => app.init());
+
+    // Close modal on overlay click
+    document.addEventListener('click', (e) => {
+        if (e.target.id === 'modalOverlay' || e.target.id === 'largeModalOverlay') {
+            app.closeModal();
+        }
+    });
+    </script>
+</body>
+</html>
