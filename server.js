@@ -21,7 +21,8 @@ app.use(express.json());
 app.get('/admin.html', (req, res) => {
   const filePath = require('path').join(__dirname, 'admin.html');
   let html = require('fs').readFileSync(filePath, 'utf8');
-  const patchScript = `<script>
+  const patchScript = `
+<script>
 document.addEventListener('DOMContentLoaded', function() {
   if (typeof app !== 'undefined') {
     if (app.data) app.data.selectedParticipants = new Set();
@@ -39,8 +40,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 });
-</script>`;
-  html = html.replace('</body>', patchScript + '\n</body>');
+</script>
+</body>
+</html>`;
+  // Append patch at end of file (original file has no closing tags)
+  html = html + patchScript;
   res.type('html').send(html);
 });
 
