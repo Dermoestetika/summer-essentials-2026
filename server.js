@@ -17,6 +17,33 @@ const transporter = nodemailer.createTransport({
 });
 
 app.use(express.json());
+// Middleware: inject selectedParticipants Set fix into admin.html
+app.get('/admin.html', (req, res) => {
+  const filePath = require('path').join(__dirname, 'admin.html');
+  let html = require('fs').readFileSync(filePath, 'utf8');
+  const patchScript = `<script>
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof app !== 'undefined') {
+    if (app.data) app.data.selectedParticipants = new Set();
+    var origLoad = app.loadData.bind(app);
+    app.loadData = async function() {
+      await origLoad();
+      if (this.data) this.data.selectedParticipants = new Set();
+    };
+    var origEmail = app.renderEmailPage ? app.renderEmailPage.bind(app) : null;
+    if (origEmail) {
+      app.renderEmailPage = function() {
+        if (this.data) this.data.selectedParticipants = new Set();
+        origEmail();
+      };
+    }
+  }
+});
+</script>`;
+  html = html.replace('</body>', patchScript + '\n</body>');
+  res.type('html').send(html);
+});
+
 app.use(express.static('.'));
 
 // CORS
