@@ -158,13 +158,13 @@ app.post('/api/test-email', async (req, res) => {
         const { email } = req.body;
         
         const info = await transporter.sendMail({
-            from: `"D\u0026F Summer Essentials" <${GMAIL_USER}>`,
+            from: `"D&F Summer Essentials" <${GMAIL_USER}>`,
             to: email,
             subject: 'Test Email - Summer Essentials 2026',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                     <div style="background: linear-gradient(135deg, #C8A951 0%, #e8d78e 100%); padding: 30px; text-align: center;">
-                        <h1 style="color: #1a1a2e; margin: 0; font-size: 28px;">D\u0026F Summer Essentials</h1>
+                        <h1 style="color: #1a1a2e; margin: 0; font-size: 28px;">D&F Summer Essentials</h1>
                         <p style="color: #1a1a2e; margin: 10px 0 0 0;">Test Email</p>
                     </div>
                     <div style="padding: 30px; background: #fff;">
@@ -232,38 +232,38 @@ app.post('/api/send-qr-email', async (req, res) => {
         
         // Send email
         const info = await transporter.sendMail({
-            from: `"D\u0026F Summer Essentials" <${GMAIL_USER}>`,
+            from: `"D&F Summer Essentials" <${GMAIL_USER}>`,
             to: participant.email,
-            subject: 'Va\u0161 QR kod za D\u0026F Summer Essentials 2026',
+            subject: 'Vas QR kod za D&F Summer Essentials 2026',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                     <div style="background: linear-gradient(135deg, #C8A951 0%, #e8d78e 100%); padding: 30px; text-align: center;">
-                        <h1 style="color: #1a1a2e; margin: 0; font-size: 28px; font-family: 'Playfair Display', serif;">D\u0026F Summer Essentials</h1>
-                        <p style="color: #1a1a2e; margin: 10px 0 0 0;">Va\u0161a prijava je potvr\u0111ena!</p>
+                        <h1 style="color: #1a1a2e; margin: 0; font-size: 28px; font-family: 'Playfair Display', serif;">D&F Summer Essentials</h1>
+                        <p style="color: #1a1a2e; margin: 10px 0 0 0;">Vasa prijava je potvrdjena!</p>
                     </div>
                     <div style="padding: 30px; background: #fff;">
-                        <p>Po\u016tovani/a <strong>${participant.name}</strong>,</p>
-                        <p>Radujemo se va\u0161em dolasku na D\u0026F Summer Essentials edukativni doga\u0111aj.</p>
+                        <p>Postovani/a <strong>${participant.name}</strong>,</p>
+                        <p>Radujemo se vasem dolasku na D&F Summer Essentials edukativni dogadjaj.</p>
                         
                         <div style="background: #f5f5f5; padding: 20px; border-radius: 10px; margin: 20px 0; text-align: center;">
-                            <p style="margin: 0 0 15px 0; color: #666;">Va\u0161 jedinstveni QR kod za ulaz:</p>
+                            <p style="margin: 0 0 15px 0; color: #666;">Vas jedinstveni QR kod za ulaz:</p>
                             <img src="${qrDataUrl}" alt="QR Code" style="max-width: 200px; margin: 15px 0;">
                             <div style="font-size: 24px; font-weight: bold; color: #1a1a2e; font-family: monospace; letter-spacing: 2px; margin-top: 10px;">
                                 ${participant.qrCode}
                             </div>
                             <p style="margin: 10px 0 0 0; font-size: 12px; color: #999;">
-                                Prika\u017eite ovaj kod na ulazu za brzi check-in
+                                Prikazite ovaj kod na ulazu za brzi check-in
                             </p>
                         </div>
                         
-                        <p><strong>Detalji doga\u0111aja:</strong></p>
+                        <p><strong>Detalji dogadjaja:</strong></p>
                         <ul>
                             <li>Datum: ${event?.date || 'Maj 2026'}</li>
                             <li>Lokacija: ${event?.location || 'TBA'}</li>
                         </ul>
                         
                         <p style="margin-top: 20px; font-size: 14px; color: #666;">
-                            Preuzmite mobilnu aplikaciju za interaktivni kviz i pra\u0107enje rezultata.
+                            Preuzmite mobilnu aplikaciju za interaktivni kviz i pracenje rezultata.
                         </p>
                     </div>
                     <div style="background: #1a1a2e; color: #fff; padding: 20px; text-align: center; font-size: 12px;">
@@ -322,28 +322,28 @@ app.post('/api/send-bulk-qr-emails', async (req, res) => {
                 
                 // Send email
                 await transporter.sendMail({
-                    from: `"D\u0026F Summer Essentials" <${GMAIL_USER}>`,
+                    from: `"D&F Summer Essentials" <${GMAIL_USER}>`,
                     to: participant.email,
-                    subject: 'Va\u0161 QR kod za D\u0026F Summer Essentials 2026',
+                    subject: 'Vas QR kod za D&F Summer Essentials 2026',
                     html: `
                         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                             <div style="background: linear-gradient(135deg, #C8A951 0%, #e8d78e 100%); padding: 30px; text-align: center;">
-                                <h1 style="color: #1a1a2e; margin: 0; font-size: 28px;">D\u0026F Summer Essentials</h1>
-                                <p style="color: #1a1a2e; margin: 10px 0 0 0;">Va\u0161a prijava je potvr\u0111ena!</p>
+                                <h1 style="color: #1a1a2e; margin: 0; font-size: 28px;">D&F Summer Essentials</h1>
+                                <p style="color: #1a1a2e; margin: 10px 0 0 0;">Vasa prijava je potvrdjena!</p>
                             </div>
                             <div style="padding: 30px; background: #fff;">
-                                <p>Po\u016tovani/a <strong>${participant.name}</strong>,</p>
-                                <p>Radujemo se va\u0161em dolasku na D\u0026F Summer Essentials edukativni doga\u0111aj.</p>
+                                <p>Postovani/a <strong>${participant.name}</strong>,</p>
+                                <p>Radujemo se vasem dolasku na D&F Summer Essentials edukativni dogadjaj.</p>
                                 
                                 <div style="background: #f5f5f5; padding: 20px; border-radius: 10px; margin: 20px 0; text-align: center;">
-                                    <p style="margin: 0 0 15px 0; color: #666;">Va\u0161 jedinstveni QR kod za ulaz:</p>
+                                    <p style="margin: 0 0 15px 0; color: #666;">Vas jedinstveni QR kod za ulaz:</p>
                                     <img src="${qrDataUrl}" alt="QR Code" style="max-width: 200px; margin: 15px 0;">
                                     <div style="font-size: 24px; font-weight: bold; color: #1a1a2e; font-family: monospace; letter-spacing: 2px; margin-top: 10px;">
                                         ${participant.qrCode}
                                     </div>
                                 </div>
                                 
-                                <p><strong>Detalji doga\u0111aja:</strong></p>
+                                <p><strong>Detalji dogadjaja:</strong></p>
                                 <ul>
                                     <li>Datum: ${event?.date || 'Maj 2026'}</li>
                                     <li>Lokacija: ${event?.location || 'TBA'}</li>
