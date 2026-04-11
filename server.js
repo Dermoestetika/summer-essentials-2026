@@ -1,8 +1,22 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const nodemailer = require('nodemailer');
+const QRCode = require('qrcode');
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Email configuration
+const GMAIL_USER = process.env.GMAIL_USER || 'dermoestetikaifarmacija@gmail.com';
+const GMAIL_PASS = process.env.GMAIL_PASS || 'ecim uiaa qqpl rmgx';
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: GMAIL_USER,
+        pass: GMAIL_PASS
+    }
+});
 
 // Middleware
 app.use(express.json());
@@ -133,6 +147,234 @@ app.post('/api/checkin', (req, res) => {
         res.json({ success: true, participant });
     } catch (err) {
         res.status(500).json({ error: 'Check-in failed' });
+    }
+});
+
+// EMAIL ENDPOINTS
+
+// Test email endpoint
+app.post('/api/test-email', async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        const info = await transporter.sendMail({
+            from: `"D\u0026F Summer Essentials" <${GMAIL_USER}>`,
+            to: email,
+            subject: 'Test Email - Summer Essentials 2026',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <div style="background: linear-gradient(135deg, #C8A951 0%, #e8d78e 100%); padding: 30px; text-align: center;">
+                        <h1 style="color: #1a1a2e; margin: 0; font-size: 28px;">D\u0026F Summer Essentials</h1>
+                        <p style="color: #1a1a2e; margin: 10px 0 0 0;">Test Email</p>
+                    </div>
+                    <div style="padding: 30px; background: #fff;">
+                        <p>Ovo je test email.</p>
+                        <p>Ako ga vidite, email sistem radi ispravno!</p>
+                    </div>
+                </div>
+            `
+        });
+        
+        res.json({ success: true, messageId: info.messageId });
+    } catch (err) {
+        console.error('Test email error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Generate QR code
+app.get('/api/generate-qr', async (req, res) => {
+    try {
+        const { text } = req.query;
+        if (!text) {
+            return res.status(400).json({ error: 'Text parameter required' });
+        }
+        
+        const qrDataUrl = await QRCode.toDataURL(text, {
+            width: 400,
+            margin: 2,
+            color: {
+                dark: '#1a1a2e',
+                light: '#ffffff'
+            }
+        });
+        
+        res.json({ qrCode: qrDataUrl });
+    } catch (err) {
+        console.error('QR generation error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Send QR email to single participant
+app.post('/api/send-qr-email', async (req, res) => {
+    try {
+        const { participantId } = req.body;
+        
+        // Load data
+        const data = JSON.parse(fs.readFileSync('./data/summer-essentials-data.json', 'utf8'));
+        const participant = data.participants.find(p => p.id === participantId || p.id == participantId);
+        
+        if (!participant) {
+            return res.status(404).json({ success: false, error: 'Participant not found' });
+        }
+        
+        // Generate QR code
+        const qrText = JSON.stringify({ type: 'participant', id: participant.id, code: participant.qrCode });
+        const qrDataUrl = await QRCode.toDataURL(qrText, {
+            width: 300,
+            margin: 2,
+            color: { dark: '#1a1a2e', light: '#ffffff' }
+        });
+        
+        // Get event details
+        const event = data.events.find(e => e.id === participant.eventId || e.id == participant.eventId);
+        
+        // Send email
+        const info = await transporter.sendMail({
+            from: `"D\u0026F Summer Essentials" <${GMAIL_USER}>`,
+            to: participant.email,
+            subject: 'Va\u0161 QR kod za D\u0026F Summer Essentials 2026',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <div style="background: linear-gradient(135deg, #C8A951 0%, #e8d78e 100%); padding: 30px; text-align: center;">
+                        <h1 style="color: #1a1a2e; margin: 0; font-size: 28px; font-family: 'Playfair Display', serif;">D\u0026F Summer Essentials</h1>
+                        <p style="color: #1a1a2e; margin: 10px 0 0 0;">Va\u0161a prijava je potvr\u0111ena!</p>
+                    </div>
+                    <div style="padding: 30px; background: #fff;">
+                        <p>Po\u016tovani/a <strong>${participant.name}</strong>,</p>
+                        <p>Radujemo se va\u0161em dolasku na D\u0026F Summer Essentials edukativni doga\u0111aj.</p>
+                        
+                        <div style="background: #f5f5f5; padding: 20px; border-radius: 10px; margin: 20px 0; text-align: center;">
+                            <p style="margin: 0 0 15px 0; color: #666;">Va\u0161 jedinstveni QR kod za ulaz:</p>
+                            <img src="${qrDataUrl}" alt="QR Code" style="max-width: 200px; margin: 15px 0;">
+                            <div style="font-size: 24px; font-weight: bold; color: #1a1a2e; font-family: monospace; letter-spacing: 2px; margin-top: 10px;">
+                                ${participant.qrCode}
+                            </div>
+                            <p style="margin: 10px 0 0 0; font-size: 12px; color: #999;">
+                                Prika\u017eite ovaj kod na ulazu za brzi check-in
+                            </p>
+                        </div>
+                        
+                        <p><strong>Detalji doga\u0111aja:</strong></p>
+                        <ul>
+                            <li>Datum: ${event?.date || 'Maj 2026'}</li>
+                            <li>Lokacija: ${event?.location || 'TBA'}</li>
+                        </ul>
+                        
+                        <p style="margin-top: 20px; font-size: 14px; color: #666;">
+                            Preuzmite mobilnu aplikaciju za interaktivni kviz i pra\u0107enje rezultata.
+                        </p>
+                    </div>
+                    <div style="background: #1a1a2e; color: #fff; padding: 20px; text-align: center; font-size: 12px;">
+                        <p>Organizator: Anapharm d.o.o. | anapharm.ba</p>
+                    </div>
+                </div>
+            `
+        });
+        
+        // Update participant email status
+        participant.emailSent = true;
+        participant.emailSentAt = new Date().toISOString();
+        fs.writeFileSync('./data/summer-essentials-data.json', JSON.stringify(data, null, 2));
+        
+        res.json({ success: true, messageId: info.messageId });
+    } catch (err) {
+        console.error('Send QR email error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Send bulk QR emails
+app.post('/api/send-bulk-qr-emails', async (req, res) => {
+    try {
+        const { participantIds } = req.body;
+        
+        if (!Array.isArray(participantIds) || participantIds.length === 0) {
+            return res.status(400).json({ success: false, error: 'No participants specified' });
+        }
+        
+        // Load data
+        const data = JSON.parse(fs.readFileSync('./data/summer-essentials-data.json', 'utf8'));
+        
+        let sent = 0;
+        let failed = 0;
+        const errors = [];
+        
+        for (const participantId of participantIds) {
+            try {
+                const participant = data.participants.find(p => p.id === participantId || p.id == participantId);
+                
+                if (!participant || participant.emailSent) {
+                    continue;
+                }
+                
+                // Generate QR code
+                const qrText = JSON.stringify({ type: 'participant', id: participant.id, code: participant.qrCode });
+                const qrDataUrl = await QRCode.toDataURL(qrText, {
+                    width: 300,
+                    margin: 2,
+                    color: { dark: '#1a1a2e', light: '#ffffff' }
+                });
+                
+                // Get event details
+                const event = data.events.find(e => e.id === participant.eventId || e.id == participant.eventId);
+                
+                // Send email
+                await transporter.sendMail({
+                    from: `"D\u0026F Summer Essentials" <${GMAIL_USER}>`,
+                    to: participant.email,
+                    subject: 'Va\u0161 QR kod za D\u0026F Summer Essentials 2026',
+                    html: `
+                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                            <div style="background: linear-gradient(135deg, #C8A951 0%, #e8d78e 100%); padding: 30px; text-align: center;">
+                                <h1 style="color: #1a1a2e; margin: 0; font-size: 28px;">D\u0026F Summer Essentials</h1>
+                                <p style="color: #1a1a2e; margin: 10px 0 0 0;">Va\u0161a prijava je potvr\u0111ena!</p>
+                            </div>
+                            <div style="padding: 30px; background: #fff;">
+                                <p>Po\u016tovani/a <strong>${participant.name}</strong>,</p>
+                                <p>Radujemo se va\u0161em dolasku na D\u0026F Summer Essentials edukativni doga\u0111aj.</p>
+                                
+                                <div style="background: #f5f5f5; padding: 20px; border-radius: 10px; margin: 20px 0; text-align: center;">
+                                    <p style="margin: 0 0 15px 0; color: #666;">Va\u0161 jedinstveni QR kod za ulaz:</p>
+                                    <img src="${qrDataUrl}" alt="QR Code" style="max-width: 200px; margin: 15px 0;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #1a1a2e; font-family: monospace; letter-spacing: 2px; margin-top: 10px;">
+                                        ${participant.qrCode}
+                                    </div>
+                                </div>
+                                
+                                <p><strong>Detalji doga\u0111aja:</strong></p>
+                                <ul>
+                                    <li>Datum: ${event?.date || 'Maj 2026'}</li>
+                                    <li>Lokacija: ${event?.location || 'TBA'}</li>
+                                </ul>
+                            </div>
+                            <div style="background: #1a1a2e; color: #fff; padding: 20px; text-align: center; font-size: 12px;">
+                                <p>Organizator: Anapharm d.o.o. | anapharm.ba</p>
+                            </div>
+                        </div>
+                    `
+                });
+                
+                // Update participant email status
+                participant.emailSent = true;
+                participant.emailSentAt = new Date().toISOString();
+                sent++;
+                
+            } catch (err) {
+                console.error(`Failed to send email to participant ${participantId}:`, err);
+                failed++;
+                errors.push({ participantId, error: err.message });
+            }
+        }
+        
+        // Save updated data
+        fs.writeFileSync('./data/summer-essentials-data.json', JSON.stringify(data, null, 2));
+        
+        res.json({ success: true, sent, failed, errors });
+    } catch (err) {
+        console.error('Bulk email error:', err);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
