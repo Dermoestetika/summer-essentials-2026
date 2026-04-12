@@ -1,11 +1,10 @@
 {
   "name": "summer-essentials-2026",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "D&F Summer Essentials 2026 - Event Management App",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "build": "echo 'Build complete'",
     "dev": "nodemon server.js"
   },
   "keywords": ["event", "quiz", "pharmacy", "anapharm"],
